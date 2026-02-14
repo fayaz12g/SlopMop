@@ -157,7 +157,7 @@ Only include elements that match a category. If an element is safe, don't includ
   // Get API key from Chrome storage
   function getApiKey() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get(['geminiApiKey'], (result) => {
+      chrome.storage.local.get(['geminiApiKey'], (result) => {
         resolve(result.geminiApiKey || null);
       });
     });
@@ -166,7 +166,7 @@ Only include elements that match a category. If an element is safe, don't includ
   // Set API key in Chrome storage
   function setApiKey(apiKey) {
     return new Promise((resolve) => {
-      chrome.storage.sync.set({ geminiApiKey: apiKey }, () => {
+      chrome.storage.local.set({ geminiApiKey: apiKey }, () => {
         resolve();
       });
     });

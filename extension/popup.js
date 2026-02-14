@@ -92,7 +92,7 @@ function showMain() {
 
 // API Key Management
 function loadApiKey() {
-  chrome.storage.sync.get(['geminiApiKey'], (result) => {
+  chrome.storage.local.get(['geminiApiKey'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
       updateApiStatus(true);
@@ -118,7 +118,7 @@ function saveApiKey() {
   }
 
   // Save to storage
-  chrome.storage.sync.set({ geminiApiKey: apiKey }, () => {
+  chrome.storage.local.set({ geminiApiKey: apiKey }, () => {
     if (chrome.runtime.lastError) {
       showMessage('Error saving API key: ' + chrome.runtime.lastError.message, 'error');
     } else {
@@ -137,7 +137,7 @@ function saveApiKey() {
 }
 
 function clearApiKey() {
-  chrome.storage.sync.remove('geminiApiKey', () => {
+  chrome.storage.local.remove('geminiApiKey', () => {
     apiKeyInput.value = '';
     showMessage('API key cleared', 'success');
     updateApiStatus(false);
@@ -172,7 +172,7 @@ rescanBtn.addEventListener('click', () => {
 // Check if API key is configured (without auto-scanning)
 async function checkApiKeyStatus() {
   try {
-    chrome.storage.sync.get(['geminiApiKey'], (result) => {
+    chrome.storage.local.get(['geminiApiKey'], (result) => {
       if (chrome.runtime.lastError) {
         console.error('Storage error:', chrome.runtime.lastError);
         showApiKeyWarning();
@@ -239,7 +239,7 @@ function showApiKeyWarning() {
 
 // Load toggle states from storage
 function loadToggleStates() {
-  chrome.storage.sync.get(['threatToggles'], (result) => {
+  chrome.storage.local.get(['threatToggles'], (result) => {
     if (result.threatToggles) {
       Object.assign(toggleStates, result.threatToggles);
       updateToggleUI();
@@ -261,7 +261,7 @@ function addToggleListeners() {
   Object.entries(threatToggles).forEach(([key, toggle]) => {
     toggle.addEventListener('change', (e) => {
       toggleStates[key] = e.target.checked;
-      chrome.storage.sync.set({ threatToggles: toggleStates });
+      chrome.storage.local.set({ threatToggles: toggleStates });
       // Only rescan if API key is configured
       chrome.storage.sync.get(['geminiApiKey'], (result) => {
         if (result.geminiApiKey) {
