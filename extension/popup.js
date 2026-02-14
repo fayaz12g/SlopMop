@@ -226,6 +226,7 @@ function showApiKeyWarning() {
   rescanBtn.onclick = () => {
     showSettings();
   };
+}
 
 // Load toggle states from storage
 function loadToggleStates() {
