@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "twelvelabs-js": "^1.2.0",
+    "yt-dlp-wrap": "^2.3.12"
+  }
+}
