@@ -246,16 +246,33 @@ function addToggleListeners() {
     toggle.addEventListener('change', (e) => {
       toggleStates[key] = e.target.checked;
       chrome.storage.sync.set({ threatToggles: toggleStates });
-      scanPage(); // Rescan when toggles change
+      // Only rescan if API key is configured
+      chrome.storage.sync.get(['geminiApiKey'], (result) => {
+        if (result.geminiApiKey) {
+          scanPage();
+        }
+      });
     });
   });
 }
 
 async function scanPage() {
+  // Check if API key is configured first
+  const hasKey = await new Promise((resolve) => {
+    chrome.storage.sync.get(['geminiApiKey'], (result) => {
+      resolve(!!result.geminiApiKey);
+    });
+  });
+
+  if (!hasKey) {
+    showApiKeyWarning();
+    return;
+  }
+
   // Reset rescan button if it was changed
   rescanBtn.textContent = 'Rescan Page';
   rescanBtn.onclick = () => scanPage();
-  
+
   // Show scanning state
   scanningDiv.classList.remove('hidden');
   resultsDiv.classList.add('hidden');
