@@ -252,13 +252,6 @@ function addToggleListeners() {
   Object.entries(threatToggles).forEach(([key, toggle]) => {
     toggle.addEventListener('change', (e) => {
       toggleStates[key] = e.target.checked;
-      chrome.storage.local.set({ threatToggles: toggleStates });
-      // Only rescan if API key is configured
-      chrome.storage.local.get(['geminiApiKey'], (result) => {
-        if (result.geminiApiKey) {
-          scanPage();
-        }
-      });
     });
   });
 }
