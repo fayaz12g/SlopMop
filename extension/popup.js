@@ -271,7 +271,7 @@ async function scanPage() {
 
   // Inject and execute content scripts
   try {
-    // First inject gemini.js, then content-gemini.js
+    // First inject gemini.js, then content.js
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['gemini.js']
