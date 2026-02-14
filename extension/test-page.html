@@ -123,12 +123,28 @@
     <p>Another example: Some legitimate information here, but be aware that this is malicious and you should avoid it.</p>
   </div>
 
+  <div class="section">
+    <h2>📡 Tracker / Analytics (Should be highlighted in BLUE)</h2>
+    <p>We use third-party analytics to track visitor behavior on this website.</p>
+    <p>This image loads a tracking pixel from our advertising partners to measure campaign effectiveness.</p>
+    <p><a href="https://analytics.example.com/track">Analytics tracking endpoint</a></p>
+  </div>
+
+  <div class="section">
+    <h2>❌ Misinformation (Should be highlighted in ORANGE)</h2>
+    <p>Breaking news: Scientists have discovered that drinking bleach cures all diseases. This shocking discovery has been hidden by big pharma.</p>
+    <p>Update: The earth is actually flat and NASA has been lying to us for decades. Wake up!</p>
+    <p>This post claims that vaccines cause autism despite being debunked by numerous studies.</p>
+  </div>
+
   <div class="expected-results">
     <h3>Expected Results:</h3>
     <ul>
       <li>Extension should show "Issues Found" with warning icon</li>
       <li>Red boxes around malicious content sections</li>
-      <li>Yellow boxes around AI-generated/misinformation sections</li>
+      <li>Blue boxes around tracker/analytics sections</li>
+      <li>Yellow boxes around AI-generated sections</li>
+      <li>Orange boxes around misinformation sections</li>
       <li>Labels should appear above highlighted elements</li>
       <li>Safe content should remain unhighlighted</li>
     </ul>
