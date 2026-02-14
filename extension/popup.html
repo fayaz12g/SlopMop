@@ -8,73 +8,146 @@
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>SlopMop</h1>
-    </div>
-    
-    <div class="settings">
-      <h2>Threat Levels</h2>
-      <div class="toggle-group">
-        <div class="toggle-item">
-          <label for="toggle-malicious" class="toggle-label">🚨 Malicious</label>
-          <input type="checkbox" id="toggle-malicious" class="toggle-switch" checked>
-        </div>
-        <div class="toggle-item">
-          <label for="toggle-trackers" class="toggle-label">🔗 Tracker Links</label>
-          <input type="checkbox" id="toggle-trackers" class="toggle-switch" checked>
-        </div>
-        <div class="toggle-item">
-          <label for="toggle-ai" class="toggle-label">🤖 AI Generated</label>
-          <input type="checkbox" id="toggle-ai" class="toggle-switch" checked>
-        </div>
-        <div class="toggle-item">
-          <label for="toggle-misinformation" class="toggle-label">❌ Misinformation</label>
-          <input type="checkbox" id="toggle-misinformation" class="toggle-switch" checked>
+    <!-- Main View -->
+    <div id="mainView" class="view">
+      <div class="header">
+        <h1>SlopMop</h1>
+        <button id="settingsBtn" class="icon-btn" title="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m-6-6h6m6 0h-6m-3.5-5.5l4 4m0-4l-4 4m7.5 7.5l-4-4m4 0l-4 4"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="settings">
+        <h2>Threat Levels</h2>
+        <div class="toggle-group">
+          <div class="toggle-item">
+            <label for="toggle-malicious" class="toggle-label">🚨 Malicious</label>
+            <input type="checkbox" id="toggle-malicious" class="toggle-switch" checked>
+          </div>
+          <div class="toggle-item">
+            <label for="toggle-trackers" class="toggle-label">🔗 Tracker Links</label>
+            <input type="checkbox" id="toggle-trackers" class="toggle-switch" checked>
+          </div>
+          <div class="toggle-item">
+            <label for="toggle-ai" class="toggle-label">🤖 AI Generated</label>
+            <input type="checkbox" id="toggle-ai" class="toggle-switch" checked>
+          </div>
+          <div class="toggle-item">
+            <label for="toggle-misinformation" class="toggle-label">❌ Misinformation</label>
+            <input type="checkbox" id="toggle-misinformation" class="toggle-switch" checked>
+          </div>
         </div>
       </div>
-    </div>
-    
-    <div id="scanning" class="scanning">
-      <div class="spinner"></div>
-      <p>Scanning page...</p>
-    </div>
-
-    <div id="results" class="results hidden">
-      <div class="status-indicator" id="statusIndicator">
-        <svg id="checkIcon" class="icon hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 6L9 17l-5-5"/>
-        </svg>
-        <svg id="warningIcon" class="icon hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <span id="statusText"></span>
+      
+      <div id="scanning" class="scanning">
+        <div class="spinner"></div>
+        <p>Scanning page...</p>
       </div>
 
-      <div class="findings">
-        <div class="finding-section" id="maliciousSection">
-          <h3>🚨 Malicious Content</h3>
-          <div id="maliciousCount" class="count">0 items found</div>
+      <div id="results" class="results hidden">
+        <div class="status-indicator" id="statusIndicator">
+          <svg id="checkIcon" class="icon hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <svg id="warningIcon" class="icon hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span id="statusText"></span>
         </div>
 
-        <div class="finding-section" id="trackersSection">
-          <h3>🔗 Tracker Links</h3>
-          <div id="trackersCount" class="count">0 items found</div>
+        <div class="findings">
+          <div class="finding-section" id="maliciousSection">
+            <h3>🚨 Malicious Content</h3>
+            <div id="maliciousCount" class="count">0 items found</div>
+          </div>
+
+          <div class="finding-section" id="trackersSection">
+            <h3>🔗 Tracker Links</h3>
+            <div id="trackersCount" class="count">0 items found</div>
+          </div>
+
+          <div class="finding-section" id="aiSection">
+            <h3>🤖 AI-Generated Content</h3>
+            <div id="aiCount" class="count">0 items found</div>
+          </div>
+
+          <div class="finding-section" id="misinformationSection">
+            <h3>❌ Misinformation</h3>
+            <div id="misinformationCount" class="count">0 items found</div>
+          </div>
         </div>
 
-        <div class="finding-section" id="aiSection">
-          <h3>🤖 AI-Generated Content</h3>
-          <div id="aiCount" class="count">0 items found</div>
-        </div>
+        <button id="rescanBtn" class="rescan-btn">Rescan Page</button>
+      </div>
+    </div>
 
-        <div class="finding-section" id="misinformationSection">
-          <h3>❌ Misinformation</h3>
-          <div id="misinformationCount" class="count">0 items found</div>
-        </div>
+    <!-- Settings View -->
+    <div id="settingsView" class="view hidden">
+      <div class="header">
+        <button id="backBtn" class="icon-btn" title="Back">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1>Settings</h1>
+        <div style="width: 32px;"></div> <!-- Spacer for centering -->
       </div>
 
-      <button id="rescanBtn" class="rescan-btn">Rescan Page</button>
+      <div class="settings-content">
+        <div class="api-status-badge" id="apiStatusBadge">
+          <span class="status-dot"></span>
+          <span id="apiStatusText">API Key Not Configured</span>
+        </div>
+
+        <div class="info-box">
+          <h3>How to get your Gemini API key:</h3>
+          <ol>
+            <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></li>
+            <li>Sign in with your Google account</li>
+            <li>Click "Get API key" or "Create API key"</li>
+            <li>Copy the generated key and paste it below</li>
+          </ol>
+          <p style="margin-top: 10px;"><strong>Note:</strong> Free tier includes 15 requests/min.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="apiKey">Google Gemini API Key</label>
+          <input 
+            type="text" 
+            id="apiKey" 
+            placeholder="Enter your API key (e.g., AIzaSy...)"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <p class="help-text">
+            Your API key is stored locally and only used to make requests to Google's Gemini API.
+          </p>
+        </div>
+
+        <div class="button-group">
+          <button id="saveBtn" class="btn-primary">Save API Key</button>
+          <button id="clearBtn" class="btn-secondary">Clear</button>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <div class="section-divider"></div>
+
+        <div class="about-section">
+          <h2>About This Extension</h2>
+          <p>
+            SlopMop uses Google's Gemini AI to analyze web page content in real-time. 
+            It can detect potentially malicious content, tracking scripts, AI-generated text, 
+            and misinformation. The analysis is performed using your API key, ensuring 
+            your privacy is maintained.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 

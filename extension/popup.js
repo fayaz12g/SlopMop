@@ -1,4 +1,9 @@
 // Get references to DOM elements
+const mainView = document.getElementById('mainView');
+const settingsView = document.getElementById('settingsView');
+const settingsBtn = document.getElementById('settingsBtn');
+const backBtn = document.getElementById('backBtn');
+
 const scanningDiv = document.getElementById('scanning');
 const resultsDiv = document.getElementById('results');
 const statusIndicator = document.getElementById('statusIndicator');
@@ -14,6 +19,14 @@ const trackersCount = document.getElementById('trackersCount');
 const aiCount = document.getElementById('aiCount');
 const misinformationCount = document.getElementById('misinformationCount');
 const rescanBtn = document.getElementById('rescanBtn');
+
+// Settings elements
+const apiKeyInput = document.getElementById('apiKey');
+const saveBtn = document.getElementById('saveBtn');
+const clearBtn = document.getElementById('clearBtn');
+const statusMessage = document.getElementById('statusMessage');
+const apiStatusBadge = document.getElementById('apiStatusBadge');
+const apiStatusText = document.getElementById('apiStatusText');
 
 // Toggle states stored in chrome storage
 const threatToggles = {
@@ -35,8 +48,106 @@ const toggleStates = {
 document.addEventListener('DOMContentLoaded', () => {
   loadToggleStates();
   addToggleListeners();
+  loadApiKey();
   checkApiKeyAndScan();
+  
+  // View switching
+  settingsBtn.addEventListener('click', showSettings);
+  backBtn.addEventListener('click', showMain);
+  
+  // Settings handlers
+  saveBtn.addEventListener('click', saveApiKey);
+  clearBtn.addEventListener('click', clearApiKey);
+  apiKeyInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') saveApiKey();
+  });
 });
+
+// View Management
+function showSettings() {
+  mainView.classList.add('hidden');
+  settingsView.classList.remove('hidden');
+  loadApiKey(); // Refresh API key display
+}
+
+function showMain() {
+  settingsView.classList.add('hidden');
+  mainView.classList.remove('hidden');
+}
+
+// API Key Management
+function loadApiKey() {
+  chrome.storage.sync.get(['geminiApiKey'], (result) => {
+    if (result.geminiApiKey) {
+      apiKeyInput.value = result.geminiApiKey;
+      updateApiStatus(true);
+    } else {
+      apiKeyInput.value = '';
+      updateApiStatus(false);
+    }
+  });
+}
+
+function saveApiKey() {
+  const apiKey = apiKeyInput.value.trim();
+
+  if (!apiKey) {
+    showMessage('Please enter an API key', 'error');
+    return;
+  }
+
+  // Basic validation
+  if (!apiKey.startsWith('AIza')) {
+    showMessage('Invalid API key format. Gemini API keys typically start with "AIza"', 'error');
+    return;
+  }
+
+  // Save to storage
+  chrome.storage.sync.set({ geminiApiKey: apiKey }, () => {
+    if (chrome.runtime.lastError) {
+      showMessage('Error saving API key: ' + chrome.runtime.lastError.message, 'error');
+    } else {
+      showMessage('API key saved successfully!', 'success');
+      updateApiStatus(true);
+      
+      // Auto-hide success message and return to main view after 1.5 seconds
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+        showMain();
+        // Trigger a scan with the new API key
+        scanPage();
+      }, 1500);
+    }
+  });
+}
+
+function clearApiKey() {
+  chrome.storage.sync.remove('geminiApiKey', () => {
+    apiKeyInput.value = '';
+    showMessage('API key cleared', 'success');
+    updateApiStatus(false);
+    
+    setTimeout(() => {
+      statusMessage.style.display = 'none';
+    }, 2000);
+  });
+}
+
+function showMessage(message, type) {
+  statusMessage.textContent = message;
+  statusMessage.className = `status-message ${type}`;
+  statusMessage.style.display = 'block';
+}
+
+function updateApiStatus(isConfigured) {
+  if (isConfigured) {
+    apiStatusBadge.className = 'api-status-badge configured';
+    apiStatusText.textContent = 'API Key Configured ✓';
+  } else {
+    apiStatusBadge.className = 'api-status-badge not-configured';
+    apiStatusText.textContent = 'API Key Not Configured';
+  }
+}
 
 // Rescan button handler
 rescanBtn.addEventListener('click', () => {
@@ -73,7 +184,7 @@ function showApiKeyWarning() {
   // Update rescan button to open settings
   rescanBtn.textContent = 'Configure API Key';
   rescanBtn.onclick = () => {
-    chrome.runtime.openOptionsPage();
+    showSettings();
   };
   
   // Show a message
@@ -82,9 +193,9 @@ function showApiKeyWarning() {
   message.innerHTML = `
     <strong>⚠️ Gemini API Key Required</strong><br><br>
     This extension uses Google's Gemini AI to analyze content. 
-    Please configure your API key in the extension settings to start scanning.
+    Please configure your API key to start scanning.
     <br><br>
-    <small>Click the button below to open settings.</small>
+    <small>Click the button below or the gear icon above to configure.</small>
   `;
   resultsDiv.insertBefore(message, rescanBtn);
 }
