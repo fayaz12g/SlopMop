@@ -2,6 +2,8 @@
 (function() {
   'use strict';
 
+  console.log('🔥 GEMINI.JS LOADED AND RUNNING');
+
   // Gemini API configuration
   const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
   
@@ -14,6 +16,7 @@
         console.error('No Gemini API key found');
         return { error: 'API key not configured' };
       }
+      console.log('Using Gemini API key:', apiKey);
 
       // Prepare the prompt for Gemini
       const prompt = createAnalysisPrompt(contentElements);
@@ -152,5 +155,7 @@ Only include elements that match a category. If an element is safe, don't includ
     setApiKey,
     hasApiKey
   };
+
+  console.log('🚀 GEMINI SERVICE EXPORTED TO WINDOW:', window.GeminiService);
 
 })();

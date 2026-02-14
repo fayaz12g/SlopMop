@@ -50,17 +50,25 @@ document.addEventListener('DOMContentLoaded', () => {
   addToggleListeners();
   loadApiKey();
   checkApiKeyAndScan();
-  
+
   // View switching
   settingsBtn.addEventListener('click', showSettings);
   backBtn.addEventListener('click', showMain);
-  
+
   // Settings handlers
   saveBtn.addEventListener('click', saveApiKey);
   clearBtn.addEventListener('click', clearApiKey);
   apiKeyInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') saveApiKey();
   });
+
+  // Safety timeout: if still scanning after 3 seconds, show API key warning
+  setTimeout(() => {
+    if (!scanningDiv.classList.contains('hidden')) {
+      console.log('Safety timeout: forcing API key warning display');
+      showApiKeyWarning();
+    }
+  }, 3000);
 });
 
 // View Management
@@ -156,13 +164,23 @@ rescanBtn.addEventListener('click', () => {
 
 // Check if API key is configured
 async function checkApiKeyAndScan() {
-  chrome.storage.sync.get(['geminiApiKey'], (result) => {
-    if (!result.geminiApiKey) {
-      showApiKeyWarning();
-    } else {
-      scanPage();
-    }
-  });
+  try {
+    chrome.storage.sync.get(['geminiApiKey'], (result) => {
+      if (chrome.runtime.lastError) {
+        console.error('Storage error:', chrome.runtime.lastError);
+        showApiKeyWarning();
+        return;
+      }
+      if (!result.geminiApiKey) {
+        showApiKeyWarning();
+      } else {
+        scanPage();
+      }
+    });
+  } catch (error) {
+    console.error('Error checking API key:', error);
+    showApiKeyWarning();
+  }
 }
 
 // Show warning if API key is not configured
@@ -187,17 +205,20 @@ function showApiKeyWarning() {
     showSettings();
   };
   
-  // Show a message
-  const message = document.createElement('div');
-  message.style.cssText = 'padding: 16px; background: #fef7e0; border-radius: 8px; margin: 16px 0; font-size: 13px; line-height: 1.5; color: #333;';
-  message.innerHTML = `
-    <strong>⚠️ Gemini API Key Required</strong><br><br>
-    This extension uses Google's Gemini AI to analyze content. 
-    Please configure your API key to start scanning.
-    <br><br>
-    <small>Click the button below or the gear icon above to configure.</small>
-  `;
-  resultsDiv.insertBefore(message, rescanBtn);
+  // Show a message (only if not already present)
+  if (!resultsDiv.querySelector('.api-key-message')) {
+    const message = document.createElement('div');
+    message.className = 'api-key-message';
+    message.style.cssText = 'padding: 16px; background: #fef7e0; border-radius: 8px; margin: 16px 0; font-size: 13px; line-height: 1.5; color: #333;';
+    message.innerHTML = `
+      <strong>⚠️ Gemini API Key Required</strong><br><br>
+      This extension uses Google's Gemini AI to analyze content.
+      Please configure your API key to start scanning.
+      <br><br>
+      <small>Click the button below or the gear icon above to configure.</small>
+    `;
+    resultsDiv.insertBefore(message, rescanBtn);
+  }
 }
 
 // Load toggle states from storage
@@ -243,8 +264,8 @@ async function scanPage() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   // Check if we can access this page
-  if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
-    displayError('Cannot scan Chrome internal pages');
+  if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:') || tab.url.startsWith('moz-extension://')) {
+    displayError('Cannot scan browser internal pages');
     return;
   }
 
@@ -258,7 +279,7 @@ async function scanPage() {
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ['content-gemini.js']
+      files: ['content.js']
     });
 
     // Wait a bit for scripts to load
