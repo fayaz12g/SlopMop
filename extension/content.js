@@ -181,8 +181,6 @@
     // Create label element
     const label = createLabel(type, elementId, reason);
     
-    // Position label relative to element
-    element.style.position = 'relative';
     element.appendChild(label);
   }
 
