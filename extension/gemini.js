@@ -5,7 +5,7 @@
   console.log('🔥 GEMINI.JS LOADED AND RUNNING');
 
   // Gemini API configuration - Updated to correct endpoint
-  const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+  const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-09-2025:generateContent';
   
   // Content analysis using Gemini
   async function analyzeContent(contentElements) {
