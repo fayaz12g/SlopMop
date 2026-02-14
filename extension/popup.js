@@ -271,7 +271,22 @@ async function scanPage() {
 
   // Reset rescan button if it was changed
   rescanBtn.textContent = 'Rescan Page';
-  rescanBtn.onclick = () => scanPage();
+  
+  // Rescan button handler
+  rescanBtn.addEventListener('click', async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    try {
+      // Tell content script to clear all existing overlays/highlights
+      await chrome.tabs.sendMessage(tab.id, { action: 'clearScanHighlights' });
+    } catch (e) {
+      console.warn('No content script to clear (probably first scan)');
+    }
+
+    // Now perform fresh scan
+    scanPage();
+  });
+
 
   // Show scanning state with progress
   scanSection.classList.add('hidden');
