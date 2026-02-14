@@ -12,6 +12,17 @@
     misinformation: 0
   };
 
+  // Store the last AI analysis results for dynamic toggle updates
+  let lastAnalysisResults = [];
+  
+  // Current toggle states
+  let currentToggleStates = {
+    malicious: true,
+    trackers: true,
+    ai: true,
+    misinformation: true
+  };
+
   // Category descriptions for tooltips
   const DESCRIPTIONS = {
     malicious: 'This content has been flagged as potentially malicious by AI analysis. It may contain phishing attempts, malware distribution, scams, or other security threats.',
@@ -135,9 +146,17 @@
         if (analysis.results && Array.isArray(analysis.results)) {
           console.log(`Received ${analysis.results.length} flagged items from batch ${i + 1}`);
           
+          // Store results for dynamic toggle updates
+          lastAnalysisResults = lastAnalysisResults.concat(analysis.results);
+          
           analysis.results.forEach(result => {
             const element = document.querySelector(`[data-scanner-temp-id="${result.elementId}"]`);
             if (element && result.category) {
+              // Add permanent scanner ID for later reference
+              const permanentId = `scanner-permanent-${elementIdCounter++}`;
+              element.setAttribute('data-scanner-permanent-id', permanentId);
+              result.permanentId = permanentId;
+              
               // Only highlight if this threat type is enabled
               const shouldHighlight = !enabledThreats || enabledThreats[result.category] === true;
               
@@ -161,12 +180,16 @@
       }
     }
 
-    // Clean up temporary IDs
+    // Clean up temporary IDs but keep permanent ones
     document.querySelectorAll('[data-scanner-temp-id]').forEach(el => {
       el.removeAttribute('data-scanner-temp-id');
     });
 
+    // Update current toggle states
+    currentToggleStates = enabledThreats || currentToggleStates;
+
     console.log('Scan complete:', scanResults);
+    console.log('Stored analysis results:', lastAnalysisResults.length);
     return scanResults;
   }
 
@@ -334,36 +357,73 @@
     }, 2000);
   }
 
-  // Listen for messages from popup
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('📥 CONTENT: Received message from popup:', request);
-
-  // 🔹 NEW: Clear highlights handler
-  if (request.action === 'clearScanHighlights') {
+  // Apply highlighting based on current analysis results and toggle states
+  function applyHighlightingFromStoredResults(toggleStates) {
+    // Clear all current highlights first
     clearHighlights();
     scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
-    sendResponse({ cleared: true });
-    return true;
-  }
-
-  if (request.action === 'getScanResults') {
-    console.log('📥 CONTENT: Starting scan with Gemini...');
-    console.log('📥 CONTENT: Enabled threats:', request.enabledThreats);
     
-    // Run scan with Gemini and pass enabled threats
-    scanPageWithGemini(request.enabledThreats).then(results => {
-      console.log('📥 CONTENT: Scan completed, sending results:', results);
-      sendResponse(results);
-    }).catch(error => {
-      console.error('📥 CONTENT: Scan error:', error);
-      const fallbackResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
-      console.log('📥 CONTENT: Sending fallback results:', fallbackResults);
-      sendResponse(fallbackResults);
+    // Re-apply highlights based on stored results and current toggle states
+    lastAnalysisResults.forEach(result => {
+      const element = document.querySelector(`[data-scanner-permanent-id="${result.permanentId}"]`);
+      if (element && result.category && toggleStates[result.category] === true) {
+        highlightElement(element, result.category, result.reason);
+        scanResults[result.category]++;
+      }
     });
-
-    return true;
+    
+    console.log('Re-applied highlights based on toggle states:', toggleStates);
+    console.log('Updated scan results:', scanResults);
   }
-});
+
+  // Listen for messages from popup and options
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log('📥 CONTENT: Received message:', request);
+
+    // Handle toggle state updates from options page
+    if (request.action === 'updateToggleStates') {
+      console.log('📥 CONTENT: Updating toggle states:', request.toggleStates);
+      currentToggleStates = request.toggleStates;
+      
+      // Re-apply highlighting based on stored results and new toggle states
+      if (lastAnalysisResults.length > 0) {
+        applyHighlightingFromStoredResults(request.toggleStates);
+      }
+      
+      sendResponse({ updated: true, scanResults: scanResults });
+      return true;
+    }
+
+    // Clear highlights handler
+    if (request.action === 'clearScanHighlights') {
+      clearHighlights();
+      scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+      lastAnalysisResults = []; // Clear stored results too
+      sendResponse({ cleared: true });
+      return true;
+    }
+
+    if (request.action === 'getScanResults') {
+      console.log('📥 CONTENT: Starting scan with Gemini...');
+      console.log('📥 CONTENT: Enabled threats:', request.enabledThreats);
+      
+      // Clear previous analysis results
+      lastAnalysisResults = [];
+      
+      // Run scan with Gemini and pass enabled threats
+      scanPageWithGemini(request.enabledThreats).then(results => {
+        console.log('📥 CONTENT: Scan completed, sending results:', results);
+        sendResponse(results);
+      }).catch(error => {
+        console.error('📥 CONTENT: Scan error:', error);
+        const fallbackResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+        console.log('📥 CONTENT: Sending fallback results:', fallbackResults);
+        sendResponse(fallbackResults);
+      });
+
+      return true;
+    }
+  });
 
 
   // Auto-scan on load (optional)

@@ -248,8 +248,45 @@ function addToggleListeners() {
     toggle.addEventListener('change', (e) => {
       toggleStates[key] = e.target.checked;
       chrome.storage.local.set({ threatToggles: toggleStates });
+      
+      // Notify content scripts of the toggle change
+      notifyContentScriptsOfToggleChange(toggleStates);
     });
   });
+}
+
+// Notify all content scripts when toggle states change  
+async function notifyContentScriptsOfToggleChange(toggleStates) {
+  try {
+    // Get current active tab
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    // Skip browser internal pages
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || 
+        tab.url.startsWith('about:') || tab.url.startsWith('moz-extension://')) {
+      return;
+    }
+    
+    try {
+      // Send toggle update message to the active tab's content script
+      const response = await chrome.tabs.sendMessage(tab.id, {
+        action: 'updateToggleStates',
+        toggleStates: toggleStates
+      });
+      
+      console.log(`Popup notified content script of toggle change:`, response);
+      
+      // Update the displayed results based on new toggle states
+      if (response && response.scanResults) {
+        displayResults(response.scanResults);
+      }
+    } catch (error) {
+      // Content script might not be loaded or no scan results yet
+      console.log(`Couldn't notify content script:`, error.message);
+    }
+  } catch (error) {
+    console.error('Error notifying content script:', error);
+  }
 }
 
 async function scanPage() {

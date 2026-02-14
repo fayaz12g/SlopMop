@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Save individual toggle state
+  // Save individual toggle state and notify content scripts
   function saveToggleState(key, value) {
     chrome.storage.local.get(['threatToggles'], (result) => {
       const currentStates = result.threatToggles || {
@@ -142,7 +142,42 @@ document.addEventListener('DOMContentLoaded', () => {
       
       chrome.storage.local.set({ threatToggles: currentStates }, () => {
         console.log(`Toggle ${key} saved as ${value}`);
+        
+        // Notify all content scripts about the toggle change
+        notifyContentScriptsOfToggleChange(currentStates);
       });
     });
+  }
+
+  // Notify all content scripts when toggle states change
+  async function notifyContentScriptsOfToggleChange(toggleStates) {
+    try {
+      // Get all tabs
+      const tabs = await chrome.tabs.query({});
+      
+      // Send message to each tab's content script
+      for (const tab of tabs) {
+        try {
+          // Skip browser internal pages
+          if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || 
+              tab.url.startsWith('about:') || tab.url.startsWith('moz-extension://')) {
+            continue;
+          }
+          
+          // Send toggle update message
+          const response = await chrome.tabs.sendMessage(tab.id, {
+            action: 'updateToggleStates',
+            toggleStates: toggleStates
+          });
+          
+          console.log(`Notified tab ${tab.id} of toggle change:`, response);
+        } catch (error) {
+          // Content script might not be loaded on this tab, that's okay
+          console.log(`Couldn't notify tab ${tab.id}:`, error.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error notifying content scripts:', error);
+    }
   }
 });
