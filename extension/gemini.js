@@ -17,8 +17,6 @@
         return { error: 'API key not configured' };
       }
       
-      console.log('Using API key:', apiKey.substring(0, 10) + '...');
-      
       // Prepare the prompt for Gemini
       const prompt = createAnalysisPrompt(contentElements);
       
@@ -29,10 +27,10 @@
           }]
         }],
         generationConfig: {
-          temperature: 0.1,
+          temperature: 1.0,
           topK: 1,
           topP: 1,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
         },
         safetySettings: [
           {
@@ -113,6 +111,8 @@ For each element, determine if it belongs to any category. Consider:
 3. Suspicious patterns or language
 4. Claims that seem unverified or false
 
+When choosing an element ID, consider the nesting patterns. If something is nested within multiple divs or containers, ensure to pass the higher level div so that z index is not an issue for the overlays.
+
 Respond ONLY with valid JSON in this exact format (no markdown, no additional text):
 {
   "results": [
@@ -125,7 +125,9 @@ Respond ONLY with valid JSON in this exact format (no markdown, no additional te
   ]
 }
 
-Only include elements that match a category. If an element is safe, don't include it in results.`;
+Only include elements that match a category. If an element is safe, don't include it in results. If an element mentions a category, but is not explicitly malicious, trackers, AI, or misinformation, classify it as "safe" and do not include it in results.
+Only include something in the results if it is something a user would not want to interact with. For example, a tool for finding malicious links is helpful and safe, but a link that leads to malware is not safe. 
+A database of malicious sites is helpful to a user and not dangerous, but the links within the database are dangerous. A news article that contains misinformation is not safe, but a news article that discusses misinformation is safe.`;
   }
 
   // Parse Gemini's response

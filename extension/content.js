@@ -120,8 +120,8 @@
       return scanResults;
     }
 
-    // Batch elements for API calls (max 20 elements per call to avoid token limits)
-    const batchSize = 20;
+    // Batch elements for API calls (max 100 elements per call to avoid token limits)
+    const batchSize = 100;
     const batches = [];
     for (let i = 0; i < contentElements.length; i += batchSize) {
       batches.push(contentElements.slice(i, i + batchSize));
