@@ -21,6 +21,8 @@ body {
   background: linear-gradient(135deg, #1a1a1a 0%, #151515 100%);
   min-height: 400px;
   border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .slopmop-popup-container .view.hidden {
