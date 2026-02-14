@@ -191,10 +191,10 @@
     
     // Set emoji and text based on type
     const labelText = {
-      malicious: '🚨 Malicious',
-      trackers: '🔗 Tracker',
-      ai: '🤖 AI Content',
-      misinformation: '❌ Misinformation'
+      malicious: 'Malicious',
+      trackers: 'Tracker',
+      ai: 'AI Generated',
+      misinformation: 'Misinformation'
     };
     
     label.textContent = labelText[type] || '⚠️ Flagged';
