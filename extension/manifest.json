@@ -24,7 +24,7 @@
     {
       "matches": ["<all_urls>"],
       "js": ["gemini.js", "content.js"],
-      "css": ["content.css"],
+      "css": ["content.css", "popup.css"],
       "run_at": "document_idle"
     }
   ],
