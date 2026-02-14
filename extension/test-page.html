@@ -11,6 +11,8 @@
       margin: 50px auto;
       padding: 20px;
       line-height: 1.6;
+      background: #ffffff;
+      color: #1a1a1a;
     }
     h1 {
       color: #1a1a1a;
@@ -42,6 +44,40 @@
       border-left: 4px solid #2196f3;
       padding: 15px;
       margin: 20px 0;
+    }
+    .expected-results {
+      margin-top: 40px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    /* Dark mode styles */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1a1a1a;
+        color: #e0e0e0;
+      }
+      h1 {
+        color: #ffffff;
+      }
+      .section {
+        background: #2d2d2d;
+      }
+      .section h2 {
+        color: #e0e0e0;
+      }
+      a {
+        color: #66b3ff;
+      }
+      .info-box {
+        background: #1a3a52;
+        border-left: 4px solid #42a5f5;
+        color: #e0e0e0;
+      }
+      .expected-results {
+        background: #2d2d2d;
+      }
     }
   </style>
 </head>
@@ -87,7 +123,7 @@
     <p>Another example: Some legitimate information here, but be aware that this is malicious and you should avoid it.</p>
   </div>
 
-  <div style="margin-top: 40px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+  <div class="expected-results">
     <h3>Expected Results:</h3>
     <ul>
       <li>Extension should show "Issues Found" with warning icon</li>
