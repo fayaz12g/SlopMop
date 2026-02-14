@@ -6,8 +6,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusMessage = document.getElementById('statusMessage');
   const apiStatus = document.getElementById('apiStatus');
 
-  // Load existing API key
+  // Threat toggle elements
+  const threatToggles = {
+    malicious: document.getElementById('toggle-malicious'),
+    trackers: document.getElementById('toggle-trackers'),
+    ai: document.getElementById('toggle-ai'),
+    misinformation: document.getElementById('toggle-misinformation')
+  };
+
+  // Load existing API key and toggles
   loadApiKey();
+  loadToggleStates();
 
   // Save button handler
   saveBtn.addEventListener('click', saveApiKey);
@@ -20,6 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') {
       saveApiKey();
     }
+  });
+
+  // Add toggle listeners
+  Object.entries(threatToggles).forEach(([key, toggle]) => {
+    toggle.addEventListener('change', (e) => {
+      saveToggleState(key, e.target.checked);
+    });
   });
 
   // Load API key from storage
@@ -91,5 +107,42 @@ document.addEventListener('DOMContentLoaded', () => {
       apiStatus.className = 'api-status not-configured';
       apiStatus.innerHTML = '<span class="status-dot"></span><span>API Key Not Configured</span>';
     }
+  }
+
+  // Load toggle states from storage
+  function loadToggleStates() {
+    chrome.storage.local.get(['threatToggles'], (result) => {
+      const savedStates = result.threatToggles || {
+        malicious: true,
+        trackers: true,
+        ai: true,
+        misinformation: true
+      };
+      
+      // Update toggle UI
+      Object.entries(savedStates).forEach(([key, value]) => {
+        if (threatToggles[key]) {
+          threatToggles[key].checked = value;
+        }
+      });
+    });
+  }
+
+  // Save individual toggle state
+  function saveToggleState(key, value) {
+    chrome.storage.local.get(['threatToggles'], (result) => {
+      const currentStates = result.threatToggles || {
+        malicious: true,
+        trackers: true,
+        ai: true,
+        misinformation: true
+      };
+      
+      currentStates[key] = value;
+      
+      chrome.storage.local.set({ threatToggles: currentStates }, () => {
+        console.log(`Toggle ${key} saved as ${value}`);
+      });
+    });
   }
 });

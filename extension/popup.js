@@ -164,11 +164,6 @@ function updateApiStatus(isConfigured) {
   }
 }
 
-// Rescan button handler
-rescanBtn.addEventListener('click', () => {
-  scanPage();
-});
-
 // Check if API key is configured (without auto-scanning)
 async function checkApiKeyStatus() {
   try {
@@ -252,6 +247,7 @@ function addToggleListeners() {
   Object.entries(threatToggles).forEach(([key, toggle]) => {
     toggle.addEventListener('change', (e) => {
       toggleStates[key] = e.target.checked;
+      chrome.storage.local.set({ threatToggles: toggleStates });
     });
   });
 }
@@ -271,7 +267,7 @@ async function scanPage() {
 
   // Reset rescan button if it was changed
   rescanBtn.textContent = 'Rescan Page';
-  
+
   // Rescan button handler
   rescanBtn.addEventListener('click', async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -286,7 +282,6 @@ async function scanPage() {
     // Now perform fresh scan
     scanPage();
   });
-
 
   // Show scanning state with progress
   scanSection.classList.add('hidden');

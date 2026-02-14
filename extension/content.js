@@ -73,11 +73,12 @@
     return elements;
   }
 
-  // Scan page using Gemini AI
-  async function scanPageWithGemini() {
+  // Scan page with Gemini AI and respect enabled threats
+  async function scanPageWithGemini(enabledThreats = null) {
     console.log('🔍 Starting Gemini-powered scan...');
     console.log('🔍 Available on window:', Object.keys(window));
     console.log('🔍 GeminiService available:', typeof window.GeminiService);
+    console.log('🔍 Enabled threats:', enabledThreats);
     
     // Clear previous results
     clearHighlights();
@@ -130,15 +131,23 @@
           continue;
         }
 
-        // Process results
+        // Process results and check if threat type is enabled
         if (analysis.results && Array.isArray(analysis.results)) {
           console.log(`Received ${analysis.results.length} flagged items from batch ${i + 1}`);
           
           analysis.results.forEach(result => {
             const element = document.querySelector(`[data-scanner-temp-id="${result.elementId}"]`);
             if (element && result.category) {
-              highlightElement(element, result.category, result.reason);
-              scanResults[result.category]++;
+              // Only highlight if this threat type is enabled
+              const shouldHighlight = !enabledThreats || enabledThreats[result.category] === true;
+              
+              if (shouldHighlight) {
+                highlightElement(element, result.category, result.reason);
+                scanResults[result.category]++;
+                console.log(`Highlighted ${result.category} element (enabled: ${shouldHighlight})`);
+              } else {
+                console.log(`Skipped highlighting ${result.category} element (disabled in settings)`);
+              }
             }
           });
         }
@@ -341,11 +350,17 @@
 
   if (request.action === 'getScanResults') {
     console.log('📥 CONTENT: Starting scan with Gemini...');
-    scanPageWithGemini().then(results => {
+    console.log('📥 CONTENT: Enabled threats:', request.enabledThreats);
+    
+    // Run scan with Gemini and pass enabled threats
+    scanPageWithGemini(request.enabledThreats).then(results => {
+      console.log('📥 CONTENT: Scan completed, sending results:', results);
       sendResponse(results);
     }).catch(error => {
-      console.error('Scan error:', error);
-      sendResponse({ malicious: 0, trackers: 0, ai: 0, misinformation: 0 });
+      console.error('📥 CONTENT: Scan error:', error);
+      const fallbackResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+      console.log('📥 CONTENT: Sending fallback results:', fallbackResults);
+      sendResponse(fallbackResults);
     });
 
     return true;
