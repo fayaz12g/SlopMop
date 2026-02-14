@@ -19,6 +19,8 @@ const trackersCount = document.getElementById('trackersCount');
 const aiCount = document.getElementById('aiCount');
 const misinformationCount = document.getElementById('misinformationCount');
 const rescanBtn = document.getElementById('rescanBtn');
+const scanBtn = document.getElementById('scanBtn');
+const scanSection = document.getElementById('scanSection');
 
 // Settings elements
 const apiKeyInput = document.getElementById('apiKey');
@@ -44,16 +46,21 @@ const toggleStates = {
   misinformation: true
 };
 
-// Run scan when popup opens
+// Initialize popup when opened
 document.addEventListener('DOMContentLoaded', () => {
   loadToggleStates();
   addToggleListeners();
   loadApiKey();
-  checkApiKeyAndScan();
+  checkApiKeyStatus();
 
   // View switching
   settingsBtn.addEventListener('click', showSettings);
   backBtn.addEventListener('click', showMain);
+
+  // Scan button handler
+  scanBtn.addEventListener('click', () => {
+    scanPage();
+  });
 
   // Settings handlers
   saveBtn.addEventListener('click', saveApiKey);
@@ -162,8 +169,8 @@ rescanBtn.addEventListener('click', () => {
   scanPage();
 });
 
-// Check if API key is configured
-async function checkApiKeyAndScan() {
+// Check if API key is configured (without auto-scanning)
+async function checkApiKeyStatus() {
   try {
     chrome.storage.sync.get(['geminiApiKey'], (result) => {
       if (chrome.runtime.lastError) {
@@ -174,7 +181,8 @@ async function checkApiKeyAndScan() {
       if (!result.geminiApiKey) {
         showApiKeyWarning();
       } else {
-        scanPage();
+        // API key is configured, show scan button
+        showScanReady();
       }
     });
   } catch (error) {
@@ -183,8 +191,16 @@ async function checkApiKeyAndScan() {
   }
 }
 
+// Show ready-to-scan state
+function showScanReady() {
+  scanSection.classList.remove('hidden');
+  scanningDiv.classList.add('hidden');
+  resultsDiv.classList.add('hidden');
+}
+
 // Show warning if API key is not configured
 function showApiKeyWarning() {
+  scanSection.classList.add('hidden');
   scanningDiv.classList.add('hidden');
   resultsDiv.classList.remove('hidden');
   
@@ -274,6 +290,7 @@ async function scanPage() {
   rescanBtn.onclick = () => scanPage();
 
   // Show scanning state
+  scanSection.classList.add('hidden');
   scanningDiv.classList.remove('hidden');
   resultsDiv.classList.add('hidden');
 
