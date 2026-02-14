@@ -2,6 +2,8 @@
 (function() {
   'use strict';
 
+  console.log('📝 CONTENT.JS LOADED AND RUNNING');
+
   // Store scan results
   let scanResults = {
     malicious: 0,
@@ -73,7 +75,9 @@
 
   // Scan page using Gemini AI
   async function scanPageWithGemini() {
-    console.log('Starting Gemini-powered scan...');
+    console.log('🔍 Starting Gemini-powered scan...');
+    console.log('🔍 Available on window:', Object.keys(window));
+    console.log('🔍 GeminiService available:', typeof window.GeminiService);
     
     // Clear previous results
     clearHighlights();
@@ -81,10 +85,12 @@
 
     // Check if Gemini service is available
     if (typeof window.GeminiService === 'undefined') {
-      console.error('GeminiService not loaded');
+      console.error('❌ GeminiService not loaded');
       // Fall back to showing error
       return scanResults;
     }
+
+    console.log('✅ GeminiService found, checking API key...');
 
     // Check if API key is configured
     const hasKey = await window.GeminiService.hasApiKey();
