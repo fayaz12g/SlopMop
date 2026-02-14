@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Scanner - Settings</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section h2 {
+      font-size: 18px;
+      color: #1a1a1a;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #4285f4;
+    }
+
+    .help-text {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .help-text a {
+      color: #4285f4;
+      text-decoration: none;
+    }
+
+    .help-text a:hover {
+      text-decoration: underline;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .info-box h3 {
+      font-size: 14px;
+      color: #1565c0;
+      margin-bottom: 8px;
+    }
+
+    .info-box p {
+      font-size: 13px;
+      color: #1976d2;
+      margin: 0;
+    }
+
+    .info-box ol {
+      margin: 10px 0 0 20px;
+      font-size: 13px;
+      color: #1976d2;
+    }
+
+    .info-box li {
+      margin-bottom: 5px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #4285f4;
+      color: white;
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      background: #3367d6;
+    }
+
+    .btn-secondary {
+      background: #f1f3f4;
+      color: #5f6368;
+    }
+
+    .btn-secondary:hover {
+      background: #e8eaed;
+    }
+
+    .status-message {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .status-message.success {
+      background: #e6f4ea;
+      color: #1e8e3e;
+      display: block;
+    }
+
+    .status-message.error {
+      background: #fce8e6;
+      color: #d93025;
+      display: block;
+    }
+
+    .api-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .api-status.configured {
+      background: #e6f4ea;
+      color: #1e8e3e;
+    }
+
+    .api-status.not-configured {
+      background: #fef7e0;
+      color: #f9ab00;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Content Scanner Settings</h1>
+    <p class="subtitle">Configure your Google Gemini API key for AI-powered content analysis</p>
+
+    <div id="apiStatus" class="api-status not-configured">
+      <span class="status-dot"></span>
+      <span>API Key Not Configured</span>
+    </div>
+
+    <div class="section">
+      <div class="info-box">
+        <h3>How to get your Gemini API key:</h3>
+        <ol>
+          <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></li>
+          <li>Sign in with your Google account</li>
+          <li>Click "Get API key" or "Create API key"</li>
+          <li>Copy the generated key and paste it below</li>
+        </ol>
+        <p style="margin-top: 10px;"><strong>Note:</strong> The free tier includes 15 requests per minute and 1 million tokens per minute.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="apiKey">Google Gemini API Key</label>
+        <input 
+          type="text" 
+          id="apiKey" 
+          placeholder="Enter your API key (e.g., AIzaSy...)"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <p class="help-text">
+          Your API key is stored locally and never shared. It's only used to make requests to Google's Gemini API.
+        </p>
+      </div>
+
+      <div class="button-group">
+        <button id="saveBtn" class="btn-primary">Save API Key</button>
+        <button id="clearBtn" class="btn-secondary">Clear</button>
+      </div>
+
+      <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <div class="section">
+      <h2>About This Extension</h2>
+      <p style="font-size: 14px; color: #666; line-height: 1.6;">
+        Content Scanner uses Google's Gemini AI to analyze web page content in real-time. 
+        It can detect potentially malicious content, tracking scripts, AI-generated text, 
+        and misinformation. The analysis is performed locally using your API key, ensuring 
+        your privacy is maintained.
+      </p>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

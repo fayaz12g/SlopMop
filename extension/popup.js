@@ -35,13 +35,59 @@ const toggleStates = {
 document.addEventListener('DOMContentLoaded', () => {
   loadToggleStates();
   addToggleListeners();
-  scanPage();
+  checkApiKeyAndScan();
 });
 
 // Rescan button handler
 rescanBtn.addEventListener('click', () => {
   scanPage();
 });
+
+// Check if API key is configured
+async function checkApiKeyAndScan() {
+  chrome.storage.sync.get(['geminiApiKey'], (result) => {
+    if (!result.geminiApiKey) {
+      showApiKeyWarning();
+    } else {
+      scanPage();
+    }
+  });
+}
+
+// Show warning if API key is not configured
+function showApiKeyWarning() {
+  scanningDiv.classList.add('hidden');
+  resultsDiv.classList.remove('hidden');
+  
+  statusIndicator.className = 'status-indicator status-warning';
+  checkIcon.classList.add('hidden');
+  warningIcon.classList.remove('hidden');
+  statusText.textContent = 'API Key Required';
+  
+  // Hide all sections
+  maliciousSection.style.display = 'none';
+  trackersSection.style.display = 'none';
+  aiSection.style.display = 'none';
+  misinformationSection.style.display = 'none';
+  
+  // Update rescan button to open settings
+  rescanBtn.textContent = 'Configure API Key';
+  rescanBtn.onclick = () => {
+    chrome.runtime.openOptionsPage();
+  };
+  
+  // Show a message
+  const message = document.createElement('div');
+  message.style.cssText = 'padding: 16px; background: #fef7e0; border-radius: 8px; margin: 16px 0; font-size: 13px; line-height: 1.5; color: #333;';
+  message.innerHTML = `
+    <strong>⚠️ Gemini API Key Required</strong><br><br>
+    This extension uses Google's Gemini AI to analyze content. 
+    Please configure your API key in the extension settings to start scanning.
+    <br><br>
+    <small>Click the button below to open settings.</small>
+  `;
+  resultsDiv.insertBefore(message, rescanBtn);
+}
 
 // Load toggle states from storage
 function loadToggleStates() {
@@ -74,6 +120,10 @@ function addToggleListeners() {
 }
 
 async function scanPage() {
+  // Reset rescan button if it was changed
+  rescanBtn.textContent = 'Rescan Page';
+  rescanBtn.onclick = () => scanPage();
+  
   // Show scanning state
   scanningDiv.classList.remove('hidden');
   resultsDiv.classList.add('hidden');
@@ -81,26 +131,43 @@ async function scanPage() {
   // Get active tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  // Inject and execute content script
+  // Check if we can access this page
+  if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+    displayError('Cannot scan Chrome internal pages');
+    return;
+  }
+
+  // Inject and execute content scripts
   try {
+    // First inject gemini.js, then content-gemini.js
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ['content.js']
+      files: ['gemini.js']
     });
 
-    // Wait a bit for scanning to complete
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content-gemini.js']
+    });
+
+    // Wait a bit for scripts to load
     setTimeout(async () => {
-      // Get results from content script
-      const results = await chrome.tabs.sendMessage(tab.id, { 
-        action: 'getScanResults',
-        enabledThreats: toggleStates
-      });
-      
-      displayResults(results);
-    }, 1500); // Simulate scanning time
+      try {
+        // Get results from content script
+        const results = await chrome.tabs.sendMessage(tab.id, { 
+          action: 'getScanResults',
+          enabledThreats: toggleStates
+        });
+        
+        displayResults(results);
+      } catch (error) {
+        console.error('Error getting scan results:', error);
+        displayError('Scan failed. Please try again.');
+      }
+    }, 500);
   } catch (error) {
     console.error('Error scanning page:', error);
-    displayError();
+    displayError('Unable to scan this page');
   }
 }
 
@@ -113,7 +180,6 @@ function displayResults(results) {
   const trackers = results.trackers || 0;
   const ai = results.ai || 0;
   const misinformation = results.misinformation || 0;
-  const total = malicious + trackers + ai + misinformation;
 
   // Update counts
   maliciousCount.textContent = `${malicious} item${malicious !== 1 ? 's' : ''} found`;
@@ -150,11 +216,17 @@ function displayResults(results) {
   }
 }
 
-function displayError() {
+function displayError(message) {
   scanningDiv.classList.add('hidden');
   resultsDiv.classList.remove('hidden');
   statusIndicator.className = 'status-indicator status-error';
   checkIcon.classList.add('hidden');
   warningIcon.classList.remove('hidden');
-  statusText.textContent = 'Error scanning page';
+  statusText.textContent = message || 'Error scanning page';
+  
+  // Hide all sections
+  maliciousSection.style.display = 'none';
+  trackersSection.style.display = 'none';
+  aiSection.style.display = 'none';
+  misinformationSection.style.display = 'none';
 }

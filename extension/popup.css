@@ -229,3 +229,183 @@ body {
 .rescan-btn:active {
   transform: scale(0.98);
 }
+
+/* Styles for highlighting elements on the page */
+
+.scanner-highlight {
+  position: relative !important;
+  animation: highlightFade 0.5s ease-in;
+}
+
+@keyframes highlightFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Red box for malicious content */
+.scanner-malicious {
+  outline: 3px solid #d93025 !important;
+  outline-offset: 2px;
+  background-color: rgba(217, 48, 37, 0.1) !important;
+  border-radius: 4px;
+}
+
+/* Blue box for tracker links */
+.scanner-trackers {
+  outline: 3px solid #1f71b8 !important;
+  outline-offset: 2px;
+  background-color: rgba(31, 113, 184, 0.1) !important;
+  border-radius: 4px;
+}
+
+/* Purple box for AI-generated content */
+.scanner-ai {
+  outline: 3px solid #7b1fa2 !important;
+  outline-offset: 2px;
+  background-color: rgba(123, 31, 162, 0.1) !important;
+  border-radius: 4px;
+}
+
+/* Orange box for misinformation */
+.scanner-misinformation {
+  outline: 3px solid #f9ab00 !important;
+  outline-offset: 2px;
+  background-color: rgba(249, 171, 0, 0.1) !important;
+  border-radius: 4px;
+}
+
+/* Interactive label */
+.scanner-label {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 2147483647 !important;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.scanner-label:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.scanner-label-malicious {
+  background: #d93025;
+  color: white;
+}
+
+.scanner-label-trackers {
+  background: #1f71b8;
+  color: white;
+}
+
+.scanner-label-ai {
+  background: #7b1fa2;
+  color: white;
+}
+
+.scanner-label-misinformation {
+  background: #f9ab00;
+  color: white;
+}
+
+/* Tooltip */
+.scanner-tooltip {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  width: 300px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  padding: 12px;
+  z-index: 2147483647 !important;
+  cursor: default;
+  pointer-events: auto;
+}
+
+.scanner-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid #ddd;
+  z-index: 2147483647 !important;
+}
+
+.scanner-tooltip::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 21px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid white;
+  z-index: 2147483647 !important;
+}
+
+.scanner-tooltip-description {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #333;
+  margin-bottom: 12px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.scanner-tooltip-button {
+  width: 100%;
+  padding: 8px 12px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.scanner-tooltip-button:hover {
+  background: #3367d6;
+}
+
+.scanner-tooltip-button:active {
+  transform: scale(0.98);
+}
+
+/* Notification */
+.scanner-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1e8e3e;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 2147483647 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
