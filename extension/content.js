@@ -12,11 +12,25 @@
   const MALICIOUS_KEYWORDS = ['this is malicious', 'malicious link', 'dangerous'];
   const AI_KEYWORDS = ['this is AI', 'ai generated', 'this is false', 'misinformation'];
 
-  // Clear any existing highlights
+  // Hardcoded descriptions for each category
+  const DESCRIPTIONS = {
+    malicious: 'This content contains patterns commonly associated with phishing attempts, malware distribution, or other malicious activities. The language and structure suggest potential security risks.',
+    ai: 'This content shows characteristics typical of AI-generated text, including repetitive patterns, unnatural phrasing, or potential misinformation. It may lack proper source attribution or contain unverified claims.'
+  };
+
+  // Generate unique ID for elements
+  let elementIdCounter = 0;
+
+  // Clear any existing highlights and labels
   function clearHighlights() {
     document.querySelectorAll('.scanner-highlight').forEach(el => {
       el.classList.remove('scanner-highlight', 'scanner-malicious', 'scanner-ai');
+      // Remove any attached labels
+      const label = el.querySelector('.scanner-label');
+      if (label) label.remove();
     });
+    // Remove any orphaned tooltips
+    document.querySelectorAll('.scanner-tooltip').forEach(tooltip => tooltip.remove());
   }
 
   // Scan text nodes for keywords
@@ -42,9 +56,155 @@
     }
   }
 
-  // Highlight an element
+  // Highlight an element and add interactive label
   function highlightElement(element, type) {
     element.classList.add('scanner-highlight', `scanner-${type}`);
+    
+    // Generate unique ID for this element
+    const elementId = `scanner-element-${elementIdCounter++}`;
+    element.setAttribute('data-scanner-id', elementId);
+    
+    // Create label element
+    const label = createLabel(type, elementId);
+    
+    // Position label relative to element
+    element.style.position = 'relative';
+    element.appendChild(label);
+  }
+
+  // Create interactive label with hover functionality
+  function createLabel(type, elementId) {
+    const label = document.createElement('div');
+    label.className = `scanner-label scanner-label-${type}`;
+    label.textContent = type === 'malicious' ? '🚨 Malicious' : '⚠️ AI/Misinformation';
+    
+    // Create tooltip (hidden by default)
+    const tooltip = createTooltip(type, elementId);
+    label.appendChild(tooltip);
+    
+    let hideTimeout = null;
+    
+    // Show tooltip on hover
+    label.addEventListener('mouseenter', () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+      tooltip.style.display = 'block';
+    });
+    
+    label.addEventListener('mouseleave', () => {
+      // Delay hiding to allow mouse to move to tooltip
+      hideTimeout = setTimeout(() => {
+        tooltip.style.display = 'none';
+      }, 200);
+    });
+    
+    // Keep tooltip open when hovering over it
+    tooltip.addEventListener('mouseenter', () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+      tooltip.style.display = 'block';
+    });
+    
+    tooltip.addEventListener('mouseleave', () => {
+      hideTimeout = setTimeout(() => {
+        tooltip.style.display = 'none';
+      }, 200);
+    });
+    
+    return label;
+  }
+
+  // Create tooltip with description and mark as safe button
+  function createTooltip(type, elementId) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'scanner-tooltip';
+    
+    // Description
+    const description = document.createElement('div');
+    description.className = 'scanner-tooltip-description';
+    description.textContent = DESCRIPTIONS[type];
+    tooltip.appendChild(description);
+    
+    // Mark as Safe button
+    const button = document.createElement('button');
+    button.className = 'scanner-tooltip-button';
+    button.textContent = 'Mark as Safe';
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      markAsSafe(elementId, type);
+    });
+    tooltip.appendChild(button);
+    
+    return tooltip;
+  }
+
+  // Mark element as safe
+  function markAsSafe(elementId, type) {
+    const element = document.querySelector(`[data-scanner-id="${elementId}"]`);
+    if (!element) return;
+    
+    // Save to localStorage for persistence
+    async function saveToLocalStorage(elementId, elementInfo) {
+      // Get existing safe list
+      const result = await chrome.storage.local.get(['safeElements']);
+      const safeElements = result.safeElements || {};
+      
+      // Add this element to safe list
+      // Key format: domain:elementHash or domain:elementText
+      const domain = window.location.hostname;
+      const key = `${domain}:${elementId}`;
+      
+      safeElements[key] = {
+        text: element.textContent.substring(0, 100), // Store snippet for reference
+        markedAt: Date.now(),
+        type: type,
+        url: window.location.href
+      };
+      
+      // Save back to storage
+      await chrome.storage.local.set({ safeElements });
+      console.log('Saved to safe list:', key);
+    }
+    
+    // Call the function
+    saveToLocalStorage(elementId, {
+      text: element.textContent.substring(0, 100),
+      type: type
+    });
+    
+    // Remove the highlight visually
+    element.classList.remove('scanner-highlight', `scanner-${type}`);
+    const label = element.querySelector('.scanner-label');
+    if (label) {
+      label.remove();
+    }
+    
+    // Update scan results
+    if (type === 'malicious') {
+      scanResults.malicious = Math.max(0, scanResults.malicious - 1);
+    } else {
+      scanResults.ai = Math.max(0, scanResults.ai - 1);
+    }
+    
+    // Show confirmation
+    showNotification('Marked as safe');
+  }
+
+  // Show brief notification
+  function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'scanner-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
   }
 
   // Scan all text-containing elements
