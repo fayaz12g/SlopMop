@@ -43,7 +43,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid #3a3a3a;
+  border-bottom: 1px solid #f8f7f7;
   background: linear-gradient(180deg, #1f1f1f 0%, #1a1a1a 100%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -559,7 +559,7 @@
   background: linear-gradient(135deg, #8b7355 0%, #6d5d47 100%);
   color: #fff;
   border: 1px solid #a08464;
-  border-radius: 8px;
+  border-radius: 0px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -602,7 +602,7 @@
   font-size: 13px;
   margin-top: 16px;
   display: none;
-  line-height: 1.slopmop-popup-container .4;
+  line-height: 1.4;
   border: 1px solid;
 }
 
