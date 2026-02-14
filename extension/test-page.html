@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Page - Content Scanner</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #1a1a1a;
+      margin-bottom: 30px;
+    }
+    .section {
+      margin-bottom: 40px;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    .section h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+    .section p {
+      margin-bottom: 10px;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Content Scanner Test Page</h1>
+
+  <div class="info-box">
+    <strong>Instructions:</strong> Open the Content Scanner extension while viewing this page. 
+    It should detect and highlight the suspicious content below.
+  </div>
+
+  <div class="section">
+    <h2>✅ Safe Content</h2>
+    <p>This is completely normal and safe text. Nothing suspicious here at all.</p>
+    <p>This paragraph contains regular information about a topic. It's well-researched and verified.</p>
+    <p><a href="https://example.com">This is a normal link to Example.com</a></p>
+  </div>
+
+  <div class="section">
+    <h2>🚨 Malicious Content (Should be highlighted in RED)</h2>
+    <p>Be careful! This is malicious content that could harm your computer.</p>
+    <p>Click here to download a file - <a href="#">this is malicious link</a></p>
+    <p>Warning: this link leads to dangerous website content.</p>
+  </div>
+
+  <div class="section">
+    <h2>⚠️ AI-Generated Content (Should be highlighted in YELLOW)</h2>
+    <p>This article was written by an AI. This is AI generated content for testing purposes.</p>
+    <p>The following statement contains this is false information: The moon is made of cheese.</p>
+    <p>This paragraph discusses misinformation that has been spreading online recently.</p>
+  </div>
+
+  <div class="section">
+    <h2>✅ More Safe Content</h2>
+    <p>Here's some more legitimate content that should not be flagged.</p>
+    <p>This information comes from reliable sources and has been fact-checked.</p>
+    <p>Feel free to trust this content as it's verified and accurate.</p>
+  </div>
+
+  <div class="section">
+    <h2>🔀 Mixed Content</h2>
+    <p>This paragraph starts off normal, but then mentions that this is AI generated content in the middle of the sentence.</p>
+    <p>Another example: Some legitimate information here, but be aware that this is malicious and you should avoid it.</p>
+  </div>
+
+  <div style="margin-top: 40px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+    <h3>Expected Results:</h3>
+    <ul>
+      <li>Extension should show "Issues Found" with warning icon</li>
+      <li>Red boxes around malicious content sections</li>
+      <li>Yellow boxes around AI-generated/misinformation sections</li>
+      <li>Labels should appear above highlighted elements</li>
+      <li>Safe content should remain unhighlighted</li>
+    </ul>
+  </div>
+</body>
+</html>

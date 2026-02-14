@@ -1,0 +1,162 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 350px;
+  min-height: 400px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #f8f9fa;
+}
+
+.container {
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Scanning state */
+.scanning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.scanning p {
+  margin-top: 16px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Results */
+.results {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Status indicator */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.status-indicator .icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+}
+
+.status-safe {
+  background: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.status-safe .icon {
+  stroke: #1e8e3e;
+}
+
+.status-warning {
+  background: #fef7e0;
+  color: #f9ab00;
+}
+
+.status-warning .icon {
+  stroke: #f9ab00;
+}
+
+.status-error {
+  background: #fce8e6;
+  color: #d93025;
+}
+
+.status-error .icon {
+  stroke: #d93025;
+}
+
+/* Findings */
+.findings {
+  margin-bottom: 20px;
+}
+
+.finding-section {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.finding-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1a1a1a;
+}
+
+.finding-section .count {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Rescan button */
+.rescan-btn {
+  width: 100%;
+  padding: 12px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.rescan-btn:hover {
+  background: #3367d6;
+}
+
+.rescan-btn:active {
+  transform: scale(0.98);
+}
