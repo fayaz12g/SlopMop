@@ -226,22 +226,6 @@ function showApiKeyWarning() {
   rescanBtn.onclick = () => {
     showSettings();
   };
-  
-  // Show a message (only if not already present)
-  if (!resultsDiv.querySelector('.api-key-message')) {
-    const message = document.createElement('div');
-    message.className = 'api-key-message';
-    message.style.cssText = 'padding: 16px; background: #fef7e0; border-radius: 8px; margin: 16px 0; font-size: 13px; line-height: 1.5; color: #333;';
-    message.innerHTML = `
-      <strong>⚠️ Gemini API Key Required</strong><br><br>
-      This extension uses Google's Gemini AI to analyze content.
-      Please configure your API key to start scanning.
-      <br><br>
-      <small>Click the button below or the gear icon above to configure.</small>
-    `;
-    resultsDiv.insertBefore(message, rescanBtn);
-  }
-}
 
 // Load toggle states from storage
 function loadToggleStates() {
