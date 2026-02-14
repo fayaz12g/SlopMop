@@ -196,6 +196,12 @@ function showScanReady() {
   scanSection.classList.remove('hidden');
   scanningDiv.classList.add('hidden');
   resultsDiv.classList.add('hidden');
+  
+  // Clear any previous API status messages in main view
+  const apiMessage = document.querySelector('.api-key-message');
+  if (apiMessage) {
+    apiMessage.remove();
+  }
 }
 
 // Show warning if API key is not configured
@@ -263,7 +269,7 @@ function addToggleListeners() {
       toggleStates[key] = e.target.checked;
       chrome.storage.local.set({ threatToggles: toggleStates });
       // Only rescan if API key is configured
-      chrome.storage.sync.get(['geminiApiKey'], (result) => {
+      chrome.storage.local.get(['geminiApiKey'], (result) => {
         if (result.geminiApiKey) {
           scanPage();
         }
@@ -275,7 +281,7 @@ function addToggleListeners() {
 async function scanPage() {
   // Check if API key is configured first
   const hasKey = await new Promise((resolve) => {
-    chrome.storage.sync.get(['geminiApiKey'], (result) => {
+    chrome.storage.local.get(['geminiApiKey'], (result) => {
       resolve(!!result.geminiApiKey);
     });
   });
@@ -289,10 +295,13 @@ async function scanPage() {
   rescanBtn.textContent = 'Rescan Page';
   rescanBtn.onclick = () => scanPage();
 
-  // Show scanning state
+  // Show scanning state with progress
   scanSection.classList.add('hidden');
   scanningDiv.classList.remove('hidden');
   resultsDiv.classList.add('hidden');
+  
+  // Update scanning text to show progress
+  updateScanProgress('Initializing scan...', 0);
 
   // Get active tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -344,6 +353,7 @@ function displayResults(results) {
   // Hide scanning, show results
   scanningDiv.classList.add('hidden');
   resultsDiv.classList.remove('hidden');
+  scanSection.classList.add('hidden');
 
   const malicious = results.malicious || 0;
   const trackers = results.trackers || 0;
@@ -388,6 +398,8 @@ function displayResults(results) {
 function displayError(message) {
   scanningDiv.classList.add('hidden');
   resultsDiv.classList.remove('hidden');
+  scanSection.classList.add('hidden');
+  
   statusIndicator.className = 'status-indicator status-error';
   checkIcon.classList.add('hidden');
   warningIcon.classList.remove('hidden');
@@ -398,4 +410,20 @@ function displayError(message) {
   trackersSection.style.display = 'none';
   aiSection.style.display = 'none';
   misinformationSection.style.display = 'none';
+}
+
+// Update scanning progress with message and percentage
+function updateScanProgress(message, percentage) {
+  const scanText = scanningDiv.querySelector('p');
+  if (scanText) {
+    scanText.textContent = message;
+  }
+  
+  // Add percentage if we want to show it (future enhancement)
+  if (percentage !== undefined) {
+    const progressBar = scanningDiv.querySelector('.progress-bar');
+    if (progressBar) {
+      progressBar.style.width = percentage + '%';
+    }
+  }
 }
