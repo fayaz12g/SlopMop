@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load API key from storage
   function loadApiKey() {
-    chrome.storage.sync.get(['geminiApiKey'], (result) => {
+    chrome.storage.local.get(['geminiApiKey'], (result) => {
       if (result.geminiApiKey) {
         apiKeyInput.value = result.geminiApiKey;
         updateStatus(true);
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Save to storage
-    chrome.storage.sync.set({ geminiApiKey: apiKey }, () => {
+    chrome.storage.local.set({ geminiApiKey: apiKey }, () => {
       if (chrome.runtime.lastError) {
         showMessage('Error saving API key: ' + chrome.runtime.lastError.message, 'error');
       } else {
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Clear API key
   function clearApiKey() {
-    chrome.storage.sync.remove('geminiApiKey', () => {
+    chrome.storage.local.remove('geminiApiKey', () => {
       apiKeyInput.value = '';
       showMessage('API key cleared', 'success');
       updateStatus(false);
