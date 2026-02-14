@@ -23,7 +23,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["gemini.js", "content-gemini.js"],
+      "js": ["gemini.js", "content.js"],
       "css": ["popup.css"],
       "run_at": "document_idle"
     }
