@@ -16,8 +16,7 @@
         console.error('No Gemini API key found');
         return { error: 'API key not configured' };
       }
-      console.log('Using Gemini API key:', apiKey);
-
+      
       // Prepare the prompt for Gemini
       const prompt = createAnalysisPrompt(contentElements);
       

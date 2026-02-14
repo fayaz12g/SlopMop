@@ -329,13 +329,18 @@
 
   // Listen for messages from popup
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log('📥 CONTENT: Received message from popup:', request);
     if (request.action === 'getScanResults') {
+      console.log('📥 CONTENT: Starting scan with Gemini...');
       // Run scan with Gemini
       scanPageWithGemini().then(results => {
+        console.log('📥 CONTENT: Scan completed, sending results:', results);
         sendResponse(results);
       }).catch(error => {
-        console.error('Scan error:', error);
-        sendResponse({ malicious: 0, trackers: 0, ai: 0, misinformation: 0 });
+        console.error('📥 CONTENT: Scan error:', error);
+        const fallbackResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+        console.log('📥 CONTENT: Sending fallback results:', fallbackResults);
+        sendResponse(fallbackResults);
       });
       
       // Return true to indicate async response

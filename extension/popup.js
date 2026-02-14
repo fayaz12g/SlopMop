@@ -300,17 +300,20 @@ async function scanPage() {
     });
 
     // Wait a bit for scripts to load
+    console.log('🔌 POPUP: Scripts injected, waiting 500ms...');
     setTimeout(async () => {
       try {
+        console.log('🔌 POPUP: Sending getScanResults message to tab', tab.id);
         // Get results from content script
         const results = await chrome.tabs.sendMessage(tab.id, { 
           action: 'getScanResults',
           enabledThreats: toggleStates
         });
         
+        console.log('🔌 POPUP: Received scan results:', results);
         displayResults(results);
       } catch (error) {
-        console.error('Error getting scan results:', error);
+        console.error('🔌 POPUP ERROR getting scan results:', error);
         displayError('Scan failed. Please try again.');
       }
     }, 500);
