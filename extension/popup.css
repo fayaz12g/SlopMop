@@ -4,6 +4,13 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: 'noir-text';
+  src: url('./NoirLullaby-9Y8M0.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .slopmop-popup-container .container {
   position: relative;
   overflow: hidden;
@@ -44,6 +51,7 @@
 .slopmop-popup-container .header h1 {
   font-size: 22px;
   font-weight: 700;
+  font-family: "noir-text";
   color: #c9a96e;
   flex: 1;
   text-align: center;
