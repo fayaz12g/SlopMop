@@ -5,12 +5,16 @@
   // Store scan results
   let scanResults = {
     malicious: 0,
-    ai: 0
+    trackers: 0,
+    ai: 0,
+    misinformation: 0
   };
 
   // Keywords to detect (fake detection for now)
   const MALICIOUS_KEYWORDS = ['this is malicious', 'malicious link', 'dangerous'];
-  const AI_KEYWORDS = ['this is AI', 'ai generated', 'this is false', 'misinformation'];
+  const TRACKER_KEYWORDS = ['tracker', 'tracking', 'pixel', 'facebook pixel', 'google analytics'];
+  const AI_KEYWORDS = ['this is AI', 'ai generated', 'ai-generated', 'generated with ai'];
+  const MISINFORMATION_KEYWORDS = ['this is false', 'misinformation', 'false claim', 'misleading'];
 
   // Hardcoded descriptions for each category
   const DESCRIPTIONS = {
@@ -37,7 +41,7 @@
   function scanElement(element) {
     const text = element.textContent.toLowerCase();
     
-    // Check for malicious content
+    // Check for malicious content (highest priority)
     for (const keyword of MALICIOUS_KEYWORDS) {
       if (text.includes(keyword)) {
         highlightElement(element, 'malicious');
@@ -46,11 +50,29 @@
       }
     }
 
+    // Check for tracker links
+    for (const keyword of TRACKER_KEYWORDS) {
+      if (text.includes(keyword)) {
+        highlightElement(element, 'trackers');
+        scanResults.trackers++;
+        return;
+      }
+    }
+
     // Check for AI-generated content
     for (const keyword of AI_KEYWORDS) {
       if (text.includes(keyword)) {
         highlightElement(element, 'ai');
         scanResults.ai++;
+        return;
+      }
+    }
+
+    // Check for misinformation (lowest priority)
+    for (const keyword of MISINFORMATION_KEYWORDS) {
+      if (text.includes(keyword)) {
+        highlightElement(element, 'misinformation');
+        scanResults.misinformation++;
         return;
       }
     }
@@ -211,7 +233,7 @@
   function scanPage() {
     // Clear previous results
     clearHighlights();
-    scanResults = { malicious: 0, ai: 0 };
+    scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
 
     // Get all elements with text content
     const textElements = document.querySelectorAll('p, span, div, h1, h2, h3, h4, h5, h6, a, li, td, th');
@@ -242,7 +264,16 @@
         if (href.includes(keyword) || text.includes(keyword)) {
           highlightElement(link, 'malicious');
           scanResults.malicious++;
-          break;
+          return;
+        }
+      }
+
+      // Check if link is a tracker
+      for (const keyword of TRACKER_KEYWORDS) {
+        if (href.includes(keyword) || text.includes(keyword)) {
+          highlightElement(link, 'trackers');
+          scanResults.trackers++;
+          return;
         }
       }
     });

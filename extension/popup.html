@@ -12,6 +12,28 @@
       <h1>Content Scanner</h1>
     </div>
     
+    <div class="settings">
+      <h2>Threat Levels</h2>
+      <div class="toggle-group">
+        <div class="toggle-item">
+          <label for="toggle-malicious" class="toggle-label">🚨 Malicious</label>
+          <input type="checkbox" id="toggle-malicious" class="toggle-switch" checked>
+        </div>
+        <div class="toggle-item">
+          <label for="toggle-trackers" class="toggle-label">🔗 Tracker Links</label>
+          <input type="checkbox" id="toggle-trackers" class="toggle-switch" checked>
+        </div>
+        <div class="toggle-item">
+          <label for="toggle-ai" class="toggle-label">🤖 AI Generated</label>
+          <input type="checkbox" id="toggle-ai" class="toggle-switch" checked>
+        </div>
+        <div class="toggle-item">
+          <label for="toggle-misinformation" class="toggle-label">❌ Misinformation</label>
+          <input type="checkbox" id="toggle-misinformation" class="toggle-switch" checked>
+        </div>
+      </div>
+    </div>
+    
     <div id="scanning" class="scanning">
       <div class="spinner"></div>
       <p>Scanning page...</p>
@@ -36,9 +58,19 @@
           <div id="maliciousCount" class="count">0 items found</div>
         </div>
 
+        <div class="finding-section" id="trackersSection">
+          <h3>🔗 Tracker Links</h3>
+          <div id="trackersCount" class="count">0 items found</div>
+        </div>
+
         <div class="finding-section" id="aiSection">
-          <h3>⚠️ AI-Generated/Misinformation</h3>
+          <h3>🤖 AI-Generated Content</h3>
           <div id="aiCount" class="count">0 items found</div>
+        </div>
+
+        <div class="finding-section" id="misinformationSection">
+          <h3>❌ Misinformation</h3>
+          <div id="misinformationCount" class="count">0 items found</div>
         </div>
       </div>
 

@@ -18,8 +18,24 @@
   border-radius: 4px;
 }
 
-/* Yellow box for AI-generated/misinformation */
+/* Blue box for tracker links */
+.scanner-trackers {
+  outline: 3px solid #1f71b8 !important;
+  outline-offset: 2px;
+  background-color: rgba(31, 113, 184, 0.1) !important;
+  border-radius: 4px;
+}
+
+/* Purple box for AI-generated content */
 .scanner-ai {
+  outline: 3px solid #7b1fa2 !important;
+  outline-offset: 2px;
+  background-color: rgba(123, 31, 162, 0.1) !important;
+  border-radius: 4px;
+}
+
+/* Orange box for misinformation */
+.scanner-misinformation {
   outline: 3px solid #f9ab00 !important;
   outline-offset: 2px;
   background-color: rgba(249, 171, 0, 0.1) !important;
