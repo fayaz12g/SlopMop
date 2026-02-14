@@ -1,70 +1,128 @@
 "use client";
-import Image from "next/image";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-[#1a1410] via-[#231a13] to-[#0f0c09] text-[#f3e7d0] font-sans">
+      
+      {/* NAV */}
+      <nav className="flex items-center justify-between px-8 py-6 border-b border-[#3a2b1d]">
+        <div className="flex items-center gap-4">
+          <Image
+            src="/icon.png"
+            alt="SlopMop Icon"
+            width={42}
+            height={42}
+          />
+          <span className="text-2xl font-bold tracking-wide text-[#c9a96e]">
+            SlopMop
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <button
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            target="_blank"
-            onClick={() => router.push("/install")}
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+
+        <div className="flex gap-6 text-sm text-[#c9a96e]">
+          <button onClick={() => router.push("/test")} className="hover:text-white transition">
+            Test Page
           </button>
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://github.com/fayaz12g/SlopMop"
             target="_blank"
             rel="noopener noreferrer"
+            className="hover:text-white transition"
           >
-            Documentation
+            GitHub
           </a>
         </div>
-      </main>
+      </nav>
+
+      {/* HERO */}
+      <section className="flex flex-col items-center justify-center text-center px-8 py-32">
+        <h1 className="text-5xl md:text-6xl font-extrabold text-[#c9a96e] drop-shadow-lg">
+          Clean the Web.
+        </h1>
+
+        <h2 className="mt-4 text-2xl md:text-3xl font-light text-[#e6d3a3]">
+          Sweep away AI slop, malicious links, and misinformation.
+        </h2>
+
+        <p className="mt-8 max-w-2xl text-lg text-[#d8c7a2] leading-relaxed">
+          SlopMop is a Chrome extension that scans web pages in real-time
+          to detect AI-generated content, misinformation, malicious links,
+          and suspicious trackers — highlighting threats with bold visual cues
+          so you can browse with clarity and confidence.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-6 mt-12">
+          <a
+            href="/slopmop.crx"
+            download
+            className="inline-flex px-8 py-4 rounded-full bg-[#c9a96e] text-black font-semibold hover:bg-[#e6c889] transition shadow-lg"
+          >
+            Download Now
+          </a>
+
+          <a
+            href="https://github.com/fayaz12g/SlopMop"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-4 rounded-full border border-[#c9a96e] text-[#c9a96e] hover:bg-[#c9a96e] hover:text-black transition"
+          >
+            View on GitHub
+          </a>
+
+          <button
+            onClick={() => router.push("/test")}
+            className="px-8 py-4 rounded-full border border-[#5c4431] text-[#d8c7a2] hover:border-[#c9a96e] hover:text-[#c9a96e] transition"
+          >
+            Try the Demo Page
+          </button>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section className="px-8 pb-32 max-w-6xl mx-auto grid md:grid-cols-2 gap-12">
+        <Feature
+          color="text-red-400"
+          title="🚨 Malicious Detection"
+          description="Red highlight boxes identify dangerous links, scam patterns, and harmful content."
+        />
+        <Feature
+          color="text-purple-400"
+          title="🧠 AI Detection"
+          description="Purple highlights indicate AI-generated content."
+        />
+        <Feature
+          color="text-yellow-400"
+          title="⚠️ Misinformation Alerts"
+          description="Yellow highlights flag potentially false or misleading statements."
+        />
+        <Feature
+          color="text-blue-400"
+          title="🔍 Tracker Awareness"
+          description="Blue highlights reveal suspicious tracking scripts or data collection behavior."
+        />
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#3a2b1d] py-8 text-center text-sm text-[#8a735c]">
+        © {new Date().getFullYear()} SlopMop — Built to fight digital grime.
+      </footer>
+    </div>
+  );
+}
+
+function Feature({ title, description, color }) {
+  return (
+    <div className="bg-[#1e1712] p-8 rounded-2xl border border-[#3a2b1d] hover:border-[#c9a96e] transition shadow-lg">
+      <h3 className={`text-xl font-semibold mb-4 ${color}`}>
+        {title}
+      </h3>
+      <p className="text-[#d8c7a2] leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
