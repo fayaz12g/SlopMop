@@ -449,7 +449,7 @@ function createTooltip(type, elementId, reason, confidence) {
   
   const labelText = {
     malicious: '🚨 Malicious',
-    trackers: '👁️ Tracker',
+    trackers: '👁️ Tracking',
     ai: '🤖 AI Generated',
     misinformation: '⚠️ Misinformation'
   };
