@@ -43,7 +43,8 @@ AI-assisted browser extension to mop up the slop and misinformation in your brow
 ### Browser extension
 
 ```bash
-cd extension
+git clone https://github.com/fayaz12g/SlopMop.git
+cd SlopMop/extension
 npm install
 node twelvelabs.js
 ```
