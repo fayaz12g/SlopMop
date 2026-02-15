@@ -127,7 +127,8 @@ Respond ONLY with valid JSON in this exact format (no markdown, no additional te
 
 Only include elements that match a category. If an element is safe, don't include it in results. If an element mentions a category, but is not explicitly malicious, trackers, AI, or misinformation, classify it as "safe" and do not include it in results.
 Only include something in the results if it is something a user would not want to interact with. For example, a tool for finding malicious links is helpful and safe, but a link that leads to malware is not safe. 
-A database of malicious sites is helpful to a user and not dangerous, but the links within the database are dangerous. A news article that contains misinformation is not safe, but a news article that discusses misinformation is safe.`;
+A database of malicious sites is helpful to a user and not dangerous, but the links within the database are dangerous. A news article that contains misinformation is not safe, but a news article that discusses misinformation is safe.
+Mentions of AI or AI companies is NOT AI generated content. If the text is likely AI generated due to it's structure, classify it as "ai". If the text is discussing AI or mentions AI but does not seem to be AI generated itself, classify it as "safe" and do not include it in results.`;
   }
 
   // Parse Gemini's response
