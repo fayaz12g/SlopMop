@@ -1,6 +1,6 @@
 # SlopMop
 
-SlopMop is an AI-assisted browser extension to mop up the slop and misinformation in your browser. It helps you spot **AI-generated content**, **misinformation**, **tracking links**, and **malicious content** on the web pages. Additionally, it verifies the authenticity of video content and detect synthetic or AI-generated artifacts.
+[SlopMop](http://slopmop.xyz) is an AI-assisted browser extension to mop up the slop and misinformation in your browser. It helps you spot **AI-generated content**, **misinformation**, **tracking links**, and **malicious content** on the web pages. Additionally, it verifies the authenticity of video content and detect synthetic or AI-generated artifacts.
 
 ---
 
