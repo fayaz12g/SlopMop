@@ -16,14 +16,16 @@ AI-assisted browser extension to mop up the slop and misinformation in your brow
 
 ![Sample Image](./extension/demo.png)
 
-* User can hover over each element to see the perceived confidence that the element falls into this category, alongside an explanation
+* Users can hover over each element to see the perceived confidence that the element falls into this category, alongside an explanation
 
 * Video analysis to detect detect synthetic or AI-generated artifacts
 
+<img width="380" height="603" alt="Screenshot 2026-02-15 at 7 48 51 AM" src="https://github.com/user-attachments/assets/da606108-d932-4a70-add0-1e776daf6bea" />
+
+* Users can easily configure toggles to enable or disable specific categories with dynamically updating rendering.
 
 ### Website
 * Information page for the extension
-
 
 
 ---
@@ -60,6 +62,15 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). See [website/README.md](website/README.md) for more.
+
+
+---
+
+## API Keys
+
+The browser extension requires an API Key. This is coonfigured in the extension itself, just drop in your Gemini API key!
+
+<img width="378" height="600" alt="API Keys" src="https://github.com/user-attachments/assets/b3f45a3b-1262-4729-a7ad-205f5f8e46c0" />
 
 ---
 
