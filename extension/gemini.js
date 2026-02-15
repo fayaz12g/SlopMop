@@ -107,7 +107,7 @@
 
 Categories:
 - malicious: Phishing attempts, malware distribution, scams, dangerous links, security threats
-- trackers: Tracking pixels, analytics, third-party trackers, privacy concerns
+- trackers: Tracking pixels, analytics, third-party trackers
 - ai: AI-generated content that may be unreliable or lack proper attribution
 - misinformation: False claims, misleading information, unverified statements
 
@@ -138,7 +138,14 @@ Only include elements that match a category. If an element is safe, don't includ
 Only include something in the results if it is something a user would not want to interact with. For example, a tool for finding malicious links is helpful and safe, but a link that leads to malware is not safe.
 A database of malicious sites is helpful to a user and not dangerous, but the links within the database are dangerous. A news article that contains misinformation is not safe, but a news article that discusses misinformation is safe.
 Mentions of AI or AI companies is NOT AI generated content. If the text is likely AI generated due to it's structure, classify it as "ai". If the text is discussing AI or mentions AI but does not seem to be AI generated itself, classify it as "safe" and do not include it in results.
-A link to the same site is not considered a tracker by itself.`;
+A link to the same site is not considered a tracker by itself.
+- Trackers include: Google Analytics, Facebook Pixel, Mixpanel, Hotjar, advertising networks, retargeting pixels, fingerprinting scripts
+- Analyze the href URL for known tracker domains
+- URLs containing: /pixel/, /track/, /analytics/, /collect/ are likely trackers
+- Same-domain links are NOT trackers by themselves
+- Mentions of analytics in text ("we use analytics") are NOT trackers - they are disclosures
+- Privacy policy links are NOT trackers
+`;
   }
 
   // Parse Gemini's response
