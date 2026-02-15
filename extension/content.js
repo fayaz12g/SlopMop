@@ -84,16 +84,31 @@
     return elements;
   }
 
+  function hashText(text) {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0; // Convert to 32bit int
+  }
+  return hash.toString();
+}
+
   // Scan page with Gemini AI and respect enabled threats
   async function scanPageWithGemini(enabledThreats = null) {
     console.log('🔍 Starting Gemini-powered scan...');
     console.log('🔍 Available on window:', Object.keys(window));
     console.log('🔍 GeminiService available:', typeof window.GeminiService);
     console.log('🔍 Enabled threats:', enabledThreats);
-    
+
     // Clear previous results
     clearHighlights();
     scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+
+    const storageResult = await chrome.storage.local.get(['safeElements']);
+    const safeElements = storageResult.safeElements || {};
+    const domain = window.location.hostname;
+    
 
     // Check if Gemini service is available
     if (typeof window.GeminiService === 'undefined') {
@@ -152,6 +167,14 @@
           analysis.results.forEach(result => {
             const element = document.querySelector(`[data-scanner-temp-id="${result.elementId}"]`);
             if (element && result.category) {
+              const elementText = element.textContent.substring(0, 200);
+              const textHash = hashText(elementText);
+              const safeKey = `${domain}:${textHash}`;
+
+              if (safeElements[safeKey]) {
+                return;
+              }
+              
               // Add permanent scanner ID for later reference
               const permanentId = `scanner-permanent-${elementIdCounter++}`;
               element.setAttribute('data-scanner-permanent-id', permanentId);
@@ -307,10 +330,13 @@
         
         // Add this element to safe list
         const domain = window.location.hostname;
-        const key = `${domain}:${elementId}`;
-        
+        const textSnippet = element.textContent.substring(0, 200);
+        const textHash = hashText(textSnippet);
+        const key = `${domain}:${textHash}`;
+
         safeElements[key] = {
-          text: element.textContent.substring(0, 100),
+          text: textSnippet,
+          hash: textHash,
           markedAt: Date.now(),
           type: type,
           url: window.location.href
