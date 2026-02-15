@@ -125,6 +125,7 @@ For each element, determine if it belongs to any category. Consider:
 misinformation:
 Today's date is ${today.toDateString()}. Misinformation includes false claims, misleading information, or unverified statements that could cause harm if believed. 
 Keep in mind the world can change, for example people may pass away or make crazy remarks in the press, so only mark something as misinformation if it impossible to be true. 
+DO NOT mark something as misinformation just it mentions misinformation. The content itself must be making a claim that is factually known to be incorrect.
 
 safe:
 Only include elements that match a category. If an element is safe, don't include it in results. If an element mentions a category, but is not explicitly malicious, trackers, AI, or misinformation, classify it as "safe" and do not include it in results.
