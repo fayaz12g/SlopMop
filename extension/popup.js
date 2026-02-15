@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadApiKey();
   checkApiKeyStatus();
 
+  // Try to load and display cached results from last scan
+  loadCachedResults();
+
   // View switching
   if (settingsBtn) settingsBtn.addEventListener('click', showSettings);
   if (backBtn) backBtn.addEventListener('click', showMain);
@@ -83,6 +86,20 @@ function showSettings() {
   mainView.classList.add('hidden');
   settingsView.classList.remove('hidden');
   loadApiKey(); // Refresh API key display
+}
+
+// Load and display cached scan results from last scan
+function loadCachedResults() {
+  chrome.storage.local.get(['lastScanResults'], (result) => {
+    if (result.lastScanResults) {
+      console.log('🔌 POPUP: Found cached scan results, displaying...');
+      // Show the results without triggering a new scan
+      scanSection.classList.add('hidden');
+      scanningDiv.classList.add('hidden');
+      resultsDiv.classList.remove('hidden');
+      displayResults(result.lastScanResults);
+    }
+  });
 }
 
 function showMain() {
@@ -406,6 +423,11 @@ function displayResults(results) {
     displayError(message);
     return;
   }
+
+  // Save results to storage for persistence
+  chrome.storage.local.set({ lastScanResults: results }, () => {
+    console.log('🔌 POPUP: Saved scan results to storage');
+  });
   
   // Hide scanning, show results
   scanningDiv.classList.add('hidden');
