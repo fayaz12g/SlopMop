@@ -4,6 +4,8 @@
 
   console.log('📝 CONTENT.JS LOADED AND RUNNING');
 
+  let activeScanId = 0;
+
   // Store scan results
   let scanResults = {
     malicious: 0,
@@ -161,15 +163,19 @@
 }
 
   // Scan page with Gemini AI and respect enabled threats
-  async function scanPageWithGemini(enabledThreats = null) {
+  async function scanPage(enabledThreats = null) {
     console.log('🔍 Starting Gemini-powered scan...');
     console.log('🔍 Available on window:', Object.keys(window));
     console.log('🔍 GeminiService available:', typeof window.GeminiService);
     console.log('🔍 Enabled threats:', enabledThreats);
-
+    const thisScanId = ++activeScanId;
+    
     // Clear previous results
     clearHighlights();
     scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+
+    // Collect sample items per category for the popup (we'll limit display there)
+    const itemsByCategory = { malicious: [], trackers: [], ai: [], misinformation: [] };
 
     const storageResult = await chrome.storage.local.get(['safeElements']);
     const safeElements = storageResult.safeElements || {};
@@ -215,11 +221,18 @@
       const batch = batches[i];
       console.log(`Processing batch ${i + 1}/${batches.length}...`);
       
+      // Abort if a newer scan started
+      if (thisScanId !== activeScanId) {
+        console.log('⛔ Aborting outdated scan');
+        return scanResults;
+      }
+
       try {
         const analysis = await window.GeminiService.analyzeContent(batch);
         
         if (analysis.error) {
           console.error('Analysis error:', analysis.error);
+          scanResults.error = analysis.error;
           continue;
         }
 
@@ -227,10 +240,8 @@
         if (analysis.results && Array.isArray(analysis.results)) {
           console.log(`Received ${analysis.results.length} flagged items from batch ${i + 1}`);
           
-          // Store results for dynamic toggle updates
-          lastAnalysisResults = lastAnalysisResults.concat(analysis.results);
-          
-          analysis.results.forEach(result => {
+          // Filter out safe elements BEFORE storing
+          const filteredResults = analysis.results.filter(result => {
             const element = document.querySelector(`[data-scanner-temp-id="${result.elementId}"]`);
             if (element && result.category) {
               const elementText = element.textContent.substring(0, 200);
@@ -240,17 +251,31 @@
               if (safeElements[safeKey]) {
                 return;
               }
-              
-              // Add permanent scanner ID for later reference
+              // Add permanent scanner ID for later reference (used by popup to jump)
               const permanentId = `scanner-permanent-${elementIdCounter++}`;
               element.setAttribute('data-scanner-permanent-id', permanentId);
               result.permanentId = permanentId;
+
+              // Save a short sample for the popup (avoid heavy payloads) including permanentId
+              try {
+                const snippet = (element.textContent || '').trim().replace(/\s+/g, ' ').substring(0, 300);
+                if (itemsByCategory[result.category] && itemsByCategory[result.category].length < 50) {
+                  itemsByCategory[result.category].push({
+                    permanentId,
+                    snippet,
+                    reason: result.reason || null,
+                    confidence: result.confidence || null
+                  });
+                }
+              } catch (e) {
+                // ignore snippet extraction errors
+              }
               
               // Only highlight if this threat type is enabled
               const shouldHighlight = !enabledThreats || enabledThreats[result.category] === true;
               
               if (shouldHighlight) {
-                highlightElement(element, result.category, result.reason);
+                highlightElement(element, result.category, result.reason, result.confidence);
                 scanResults[result.category]++;
                 console.log(`Highlighted ${result.category} element (enabled: ${shouldHighlight})`);
               } else {
@@ -279,11 +304,12 @@
 
     console.log('Scan complete:', scanResults);
     console.log('Stored analysis results:', lastAnalysisResults.length);
-    return scanResults;
+    // Return counts plus collected example items (popup will show the first 5)
+    return Object.assign({}, scanResults, { items: itemsByCategory });
   }
 
   // Highlight an element and add interactive label
-  function highlightElement(element, type, reason) {
+  function highlightElement(element, type, reason, confidence) {
     element.classList.add('scanner-highlight', `scanner-${type}`);
     
     // Generate unique ID for this element
@@ -291,13 +317,13 @@
     element.setAttribute('data-scanner-id', elementId);
     
     // Create label element
-    const label = createLabel(type, elementId, reason);
+    const label = createLabel(type, elementId, reason, confidence);
     
     element.appendChild(label);
   }
 
   // Create interactive label with hover functionality
-  function createLabel(type, elementId, reason) {
+  function createLabel(type, elementId, reason, confidence) {
     const label = document.createElement('div');
     label.className = `scanner-label scanner-label-${type}`;
     
@@ -312,7 +338,7 @@
     label.textContent = labelText[type] || '⚠️ Flagged';
     
     // Create tooltip (hidden by default)
-    const tooltip = createTooltip(type, elementId, reason);
+    const tooltip = createTooltip(type, elementId, reason, confidence);
     label.appendChild(tooltip);
     
     let hideTimeout = null;
@@ -352,7 +378,7 @@
   }
 
   // Create tooltip with description and mark as safe button
-  function createTooltip(type, elementId, reason) {
+  function createTooltip(type, elementId, reason, confidence) {
     const tooltip = document.createElement('div');
     tooltip.className = 'scanner-tooltip';
     
@@ -361,11 +387,14 @@
     description.className = 'scanner-tooltip-description';
     
     // Use AI-provided reason if available, otherwise use default
-    if (reason) {
-      description.textContent = `AI Analysis: ${reason}`;
-    } else {
-      description.textContent = DESCRIPTIONS[type];
+    let tooltipText = reason ? reason : DESCRIPTIONS[type];
+    
+    // Add confidence if available
+    if (confidence !== undefined) {
+      tooltipText += ' [Confidence: ' + Math.round(confidence * 100) + '%]';
     }
+    
+    description.textContent = tooltipText;
     
     tooltip.appendChild(description);
     
@@ -459,7 +488,7 @@
     lastAnalysisResults.forEach(result => {
       const element = document.querySelector(`[data-scanner-permanent-id="${result.permanentId}"]`);
       if (element && result.category && toggleStates[result.category] === true) {
-        highlightElement(element, result.category, result.reason);
+        highlightElement(element, result.category, result.reason, result.confidence);
         scanResults[result.category]++;
       }
     });
@@ -503,7 +532,7 @@
       lastAnalysisResults = [];
       
       // Run scan with Gemini and pass enabled threats
-      scanPageWithGemini(request.enabledThreats).then(results => {
+      scanPage(request.enabledThreats).then(results => {
         console.log('📥 CONTENT: Scan completed, sending results:', results);
         sendResponse(results);
       }).catch(error => {
@@ -515,14 +544,30 @@
 
       return true;
     }
+
+    // Jump to element request from popup (smooth scroll + highlight)
+    if (request.action === 'jumpToElement' && request.permanentId) {
+      try {
+        const el = document.querySelector(`[data-scanner-permanent-id="${request.permanentId}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          // Flash outline
+          const prevOutline = el.style.outline;
+          el.style.outline = '4px solid #ffd54f';
+          el.style.transition = 'outline 0.3s ease';
+          setTimeout(() => {
+            el.style.outline = prevOutline || '';
+          }, 2500);
+          sendResponse({ jumped: true });
+        } else {
+          // Not found
+          sendResponse({ jumped: false, error: 'element not found' });
+        }
+      } catch (e) {
+        console.error('Error jumping to element:', e);
+        sendResponse({ jumped: false, error: e.message });
+      }
+      return true;
+    }
   });
-
-
-  // Auto-scan on load (optional)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      // Don't auto-scan, wait for user to click
-    });
-  }
-
 })();

@@ -29,6 +29,7 @@ const clearBtn = document.getElementById('clearBtn');
 const statusMessage = document.getElementById('statusMessage');
 const apiStatusBadge = document.getElementById('apiStatusBadge');
 const apiStatusText = document.getElementById('apiStatusText');
+const resetSafeBtn = document.getElementById('resetSafeBtn');
 
 // Toggle states stored in chrome storage
 const threatToggles = {
@@ -54,20 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
   checkApiKeyStatus();
 
   // View switching
-  settingsBtn.addEventListener('click', showSettings);
-  backBtn.addEventListener('click', showMain);
+  if (settingsBtn) settingsBtn.addEventListener('click', showSettings);
+  if (backBtn) backBtn.addEventListener('click', showMain);
+
+  // reset button listener
+  resetSafeBtn.addEventListener('click', resetSafeElements);
 
   // Scan button handler
-  scanBtn.addEventListener('click', () => {
-    scanPage();
-  });
+  if (scanBtn) scanBtn.addEventListener('click', () => { scanPage(); });
 
   // Settings handlers
-  saveBtn.addEventListener('click', saveApiKey);
-  clearBtn.addEventListener('click', clearApiKey);
-  apiKeyInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') saveApiKey();
-  });
+  if (saveBtn) saveBtn.addEventListener('click', saveApiKey);
+  if (clearBtn) clearBtn.addEventListener('click', clearApiKey);
+  if (apiKeyInput) apiKeyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') saveApiKey(); });
 
   // Safety timeout: if still scanning after 3 seconds, show API key warning
   setTimeout(() => {
@@ -132,6 +132,21 @@ function saveApiKey() {
         // Trigger a scan with the new API key
         scanPage();
       }, 1500);
+    }
+  });
+}
+
+function resetSafeElements() {
+  if (!confirm('Are you sure you want to clear all marked safe elements?')) {
+    return;
+  }
+
+  chrome.storage.local.remove('safeElements', () => {
+    if (chrome.runtime.lastError) {
+      showMessage('Error clearing safe list: ' + chrome.runtime.lastError.message, 'error');
+    } else {
+      showMessage('Safe list cleared successfully!', 'success');
+      console.log('All safe elements removed');
     }
   });
 }
@@ -245,6 +260,7 @@ function updateToggleUI() {
 // Add listeners to different toggle switches
 function addToggleListeners() {
   Object.entries(threatToggles).forEach(([key, toggle]) => {
+    if (!toggle) return;
     toggle.addEventListener('change', (e) => {
       toggleStates[key] = e.target.checked;
       chrome.storage.local.set({ threatToggles: toggleStates });
@@ -375,6 +391,22 @@ async function scanPage() {
 }
 
 function displayResults(results) {
+  // Check for API errors
+  if (results.error) {
+    let message = 'Error scanning page';
+    if (results.error.includes('429')) {
+      message = 'Rate limit exceeded. Please wait a moment before scanning again.';
+    } else if (results.error.includes('API key') || results.error.includes('API_KEY')) {
+      message = 'Invalid API key. Please check your settings.';
+    } else if (results.error.includes('network') || results.error.includes('fetch')) {
+      message = 'Network error. Please check your connection.';
+    } else {
+      message = 'Scan failed: ' + results.error;
+    }
+    displayError(message);
+    return;
+  }
+  
   // Hide scanning, show results
   scanningDiv.classList.add('hidden');
   resultsDiv.classList.remove('hidden');
@@ -392,10 +424,153 @@ function displayResults(results) {
   misinformationCount.textContent = `${misinformation} item${misinformation !== 1 ? 's' : ''} found`;
 
   // Show/hide sections based on findings and toggle state
-  maliciousSection.style.display = (malicious > 0 && toggleStates.malicious) ? 'block' : 'none';
-  trackersSection.style.display = (trackers > 0 && toggleStates.trackers) ? 'block' : 'none';
-  aiSection.style.display = (ai > 0 && toggleStates.ai) ? 'block' : 'none';
-  misinformationSection.style.display = (misinformation > 0 && toggleStates.misinformation) ? 'block' : 'none';
+  if (maliciousSection) maliciousSection.style.display = (malicious > 0 && toggleStates.malicious) ? 'block' : 'none';
+  if (trackersSection) trackersSection.style.display = (trackers > 0 && toggleStates.trackers) ? 'block' : 'none';
+  if (aiSection) aiSection.style.display = (ai > 0 && toggleStates.ai) ? 'block' : 'none';
+  if (misinformationSection) misinformationSection.style.display = (misinformation > 0 && toggleStates.misinformation) ? 'block' : 'none';
+
+  // Helper to render first up to 5 examples for a category
+  function renderExamplesForCategory(category, containerId, toggleBtnId) {
+    let container = document.getElementById(containerId);
+    let toggleBtn = document.getElementById(toggleBtnId);
+    // If elements don't exist (older popup markup), create them
+    const sectionMap = {
+      malicious: 'maliciousSection',
+      trackers: 'trackersSection',
+      ai: 'aiSection',
+      misinformation: 'misinformationSection'
+    };
+    const parentSection = document.getElementById(sectionMap[category]);
+    if (parentSection && !toggleBtn) {
+      toggleBtn = document.createElement('button');
+      toggleBtn.className = 'examples-toggle';
+      toggleBtn.id = toggleBtnId;
+      parentSection.appendChild(toggleBtn);
+    }
+    if (parentSection && !container) {
+      container = document.createElement('div');
+      container.className = 'examples-list hidden';
+      container.id = containerId;
+      parentSection.appendChild(container);
+    }
+    // Clear existing
+    if (!container) return;
+    container.innerHTML = '';
+
+    const items = (results.items && results.items[category]) ? results.items[category] : [];
+    const total = items.length;
+    const shown = Math.min(5, total);
+
+    if (total === 0) {
+      if (container) container.innerHTML = '<div class="example-empty">No examples</div>';
+      if (toggleBtn) toggleBtn.style.display = 'none';
+      console.log(`Popup: no examples for ${category}`);
+      return;
+    }
+
+    if (toggleBtn) {
+      toggleBtn.style.display = 'inline-block';
+      toggleBtn.textContent = `Threats Found (${shown})`;
+      // Ensure toggle hides/shows the container
+      toggleBtn.onclick = () => {
+        const hidden = container.classList.toggle('hidden');
+        toggleBtn.textContent = hidden ? `Threats Found (${shown})` : `Hide Threats (${shown})`;
+      };
+    }
+
+    // Render the first N items as streamlined entries with a Jump button
+    const list = document.createElement('div');
+    list.className = 'examples-list-inner';
+    for (let i = 0; i < shown; i++) {
+      const it = items[i];
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'example-item';
+
+      const label = document.createElement('div');
+      label.className = 'example-label';
+      // Show only the threat level (derived from confidence) as the visible label
+      const confVal = (typeof it.confidence === 'number') ? it.confidence : (it.confidence ? Number(it.confidence) : null);
+      let threatLevel = 'Unknown';
+      if (confVal !== null && !isNaN(confVal)) {
+        if (confVal >= 0.8) threatLevel = 'High';
+        else if (confVal >= 0.5) threatLevel = 'Medium';
+        else threatLevel = 'Low';
+      }
+      label.textContent = threatLevel;
+      // Hover shows the AI reason if available (no snippet)
+      label.title = it.reason || '';
+      itemDiv.appendChild(label);
+
+      // Optional confidence indicator
+      if (it.confidence) {
+        const conf = document.createElement('div');
+        conf.className = 'example-confidence';
+        conf.textContent = `Confidence: ${Math.round((it.confidence || 0) * 100)}%`;
+        itemDiv.appendChild(conf);
+      }
+
+      const jumpBtn = document.createElement('button');
+      jumpBtn.className = 'example-jump-btn';
+      jumpBtn.textContent = 'Jump';
+      jumpBtn.onclick = async () => {
+        try {
+          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          if (!tab) return;
+
+          // First try: ask content script to jump (preferred)
+          try {
+            const response = await chrome.tabs.sendMessage(tab.id, { action: 'jumpToElement', permanentId: it.permanentId });
+            console.log('Jump response from content script:', response);
+            if (response && response.jumped) return;
+          } catch (msgErr) {
+            console.warn('Jump message to content script failed, will try fallback executeScript', msgErr);
+          }
+
+          // Fallback: inject a small script into the page to find the element and scroll to it.
+          try {
+            await chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              func: (pid) => {
+                try {
+                  const el = document.querySelector(`[data-scanner-permanent-id="${pid}"]`);
+                  if (!el) return { jumped: false, error: 'not-found' };
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                  const prevOutline = el.style.outline;
+                  el.style.outline = '4px solid #ffd54f';
+                  setTimeout(() => { el.style.outline = prevOutline || ''; }, 2500);
+                  return { jumped: true };
+                } catch (e) {
+                  return { jumped: false, error: e && e.message };
+                }
+              },
+              args: [it.permanentId]
+            });
+            console.log('Fallback jump executed via scripting API');
+          } catch (execErr) {
+            console.error('Fallback executeScript jump failed:', execErr);
+          }
+        } catch (e) {
+          console.error('Error during jump handling:', e);
+        }
+      };
+
+      itemDiv.appendChild(jumpBtn);
+      list.appendChild(itemDiv);
+    }
+    container.appendChild(list);
+    // Keep container hidden until user toggles
+    container.classList.add('hidden');
+  }
+
+  // Render examples for each category
+  try {
+    renderExamplesForCategory('malicious', 'maliciousExamples', 'maliciousToggleBtn');
+    renderExamplesForCategory('trackers', 'trackersExamples', 'trackersToggleBtn');
+    renderExamplesForCategory('ai', 'aiExamples', 'aiToggleBtn');
+    renderExamplesForCategory('misinformation', 'misinformationExamples', 'misinformationToggleBtn');
+  } catch (e) {
+    console.warn('Error rendering examples:', e);
+  }
 
   // Calculate visible total based on enabled threats
   let visibleTotal = 0;
@@ -404,6 +579,19 @@ function displayResults(results) {
   if (toggleStates.ai) visibleTotal += ai;
   if (toggleStates.misinformation) visibleTotal += misinformation;
 
+  // Create or get disclaimer element dynamically
+  let disclaimerEl = document.getElementById('resultsDisclaimer');
+  if (!disclaimerEl) {
+    disclaimerEl = document.createElement('div');
+    disclaimerEl.id = 'resultsDisclaimer';
+    disclaimerEl.className = 'disclaimer hidden';
+    disclaimerEl.textContent = 'Note: only the first 5 results per threat category are shown here.';
+    const findings = document.querySelector('.findings');
+    if (findings && findings.parentNode) {
+      findings.parentNode.insertBefore(disclaimerEl, findings.nextSibling);
+    }
+  }
+
   // Update status indicator
   if (visibleTotal === 0) {
     // All clear
@@ -411,12 +599,14 @@ function displayResults(results) {
     checkIcon.classList.remove('hidden');
     warningIcon.classList.add('hidden');
     statusText.textContent = 'All Clear!';
+    if (disclaimerEl) disclaimerEl.classList.add('hidden');
   } else {
     // Issues found
     statusIndicator.className = 'status-indicator status-warning';
     checkIcon.classList.add('hidden');
     warningIcon.classList.remove('hidden');
     statusText.textContent = `${visibleTotal} Issue${visibleTotal !== 1 ? 's' : ''} Found`;
+    if (disclaimerEl) disclaimerEl.classList.remove('hidden');
   }
 }
 
@@ -435,6 +625,12 @@ function displayError(message) {
   trackersSection.style.display = 'none';
   aiSection.style.display = 'none';
   misinformationSection.style.display = 'none';
+  
+  // Hide video section if exists
+  const videoSection = document.getElementById('videoSection');
+  if (videoSection) {
+    videoSection.style.display = 'none';
+  }
 }
 
 // Update scanning progress with message and percentage

@@ -18,9 +18,9 @@ export default function Home() {
             width={42}
             height={42}
           />
-          <span className="text-2xl font-bold tracking-wide text-[#c9a96e]">
+          <h5 className="text-2xl font-bold tracking-wide text-[#c9a96e]">
             SlopMop
-          </span>
+          </h5>
         </div>
 
         <div className="flex gap-6 text-sm text-[#c9a96e]">
