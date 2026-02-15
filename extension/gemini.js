@@ -1,31 +1,36 @@
 // Gemini API service for content analysis
-(function() {
-  'use strict';
+(function () {
+  "use strict";
 
-  console.log('🔥 GEMINI.JS LOADED AND RUNNING');
+  console.log("🔥 GEMINI.JS LOADED AND RUNNING");
 
   // Gemini API configuration - Updated to correct endpoint
-  const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-09-2025:generateContent';
-  
+  const GEMINI_API_URL =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-09-2025:generateContent";
+
   // Content analysis using Gemini
   async function analyzeContent(contentElements) {
     try {
       // Get API key from storage
       const apiKey = await getApiKey();
       if (!apiKey) {
-        console.error('No Gemini API key found');
-        return { error: 'API key not configured' };
+        console.error("No Gemini API key found");
+        return { error: "API key not configured" };
       }
-      
+
       // Prepare the prompt for Gemini
       const prompt = createAnalysisPrompt(contentElements);
-      
+
       const requestBody = {
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
         generationConfig: {
           temperature: 1.0,
           topK: 1,
@@ -35,57 +40,61 @@
         safetySettings: [
           {
             category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            threshold: "BLOCK_MEDIUM_AND_ABOVE",
           },
           {
-            category: "HARM_CATEGORY_HATE_SPEECH", 
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE",
           },
           {
             category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            threshold: "BLOCK_MEDIUM_AND_ABOVE",
           },
           {
             category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          }
-        ]
+            threshold: "BLOCK_MEDIUM_AND_ABOVE",
+          },
+        ],
       };
-      
-      console.log('🌐 Making request to:', `${GEMINI_API_URL}?key=${apiKey.substring(0, 10)}...`);
-      
+
+      console.log(
+        "🌐 Making request to:",
+        `${GEMINI_API_URL}?key=${apiKey.substring(0, 10)}...`,
+      );
+
       // Call Gemini API with correct format
       const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
-      console.log('📡 Response status:', response.status);
+      console.log("📡 Response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ API Error:', response.status, errorText);
-        throw new Error(`API request failed: ${response.status} - ${errorText}`);
+        console.error("❌ API Error:", response.status, errorText);
+        throw new Error(
+          `API request failed: ${response.status} - ${errorText}`,
+        );
       }
 
       const data = await response.json();
-      console.log('✅ API Response:', data);
-      
+      console.log("✅ API Response:", data);
+
       // Extract and parse the response
       const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!resultText) {
-        throw new Error('No response from Gemini');
+        throw new Error("No response from Gemini");
       }
 
       // Parse the JSON response
       const results = parseGeminiResponse(resultText);
       return results;
-
     } catch (error) {
-      console.error('Gemini API error:', error);
+      console.error("Gemini API error:", error);
       return { error: error.message };
     }
   }
@@ -93,7 +102,7 @@
   // Create the analysis prompt for Gemini
   function createAnalysisPrompt(contentElements) {
     const elementsJson = JSON.stringify(contentElements, null, 2);
-    
+
     return `You are a content safety analyzer. Analyze the following web page elements and classify them into threat categories.
 
 Categories:
@@ -126,9 +135,10 @@ Respond ONLY with valid JSON in this exact format (no markdown, no additional te
 }
 
 Only include elements that match a category. If an element is safe, don't include it in results. If an element mentions a category, but is not explicitly malicious, trackers, AI, or misinformation, classify it as "safe" and do not include it in results.
-Only include something in the results if it is something a user would not want to interact with. For example, a tool for finding malicious links is helpful and safe, but a link that leads to malware is not safe. 
+Only include something in the results if it is something a user would not want to interact with. For example, a tool for finding malicious links is helpful and safe, but a link that leads to malware is not safe.
 A database of malicious sites is helpful to a user and not dangerous, but the links within the database are dangerous. A news article that contains misinformation is not safe, but a news article that discusses misinformation is safe.
-Mentions of AI or AI companies is NOT AI generated content. If the text is likely AI generated due to it's structure, classify it as "ai". If the text is discussing AI or mentions AI but does not seem to be AI generated itself, classify it as "safe" and do not include it in results.`;
+Mentions of AI or AI companies is NOT AI generated content. If the text is likely AI generated due to it's structure, classify it as "ai". If the text is discussing AI or mentions AI but does not seem to be AI generated itself, classify it as "safe" and do not include it in results.
+A link to the same site is not considered a tracker by itself.`;
   }
 
   // Parse Gemini's response
@@ -136,23 +146,23 @@ Mentions of AI or AI companies is NOT AI generated content. If the text is likel
     try {
       // Remove markdown code blocks if present
       let cleanText = responseText.trim();
-      if (cleanText.startsWith('```json')) {
-        cleanText = cleanText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      } else if (cleanText.startsWith('```')) {
-        cleanText = cleanText.replace(/```\n?/g, '');
+      if (cleanText.startsWith("```json")) {
+        cleanText = cleanText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
+      } else if (cleanText.startsWith("```")) {
+        cleanText = cleanText.replace(/```\n?/g, "");
       }
-      
+
       const parsed = JSON.parse(cleanText);
-      
+
       // Validate the response structure
       if (!parsed.results || !Array.isArray(parsed.results)) {
-        throw new Error('Invalid response format');
+        throw new Error("Invalid response format");
       }
 
       return parsed;
     } catch (error) {
-      console.error('Failed to parse Gemini response:', error);
-      console.error('Raw response:', responseText);
+      console.error("Failed to parse Gemini response:", error);
+      console.error("Raw response:", responseText);
       return { results: [] };
     }
   }
@@ -160,7 +170,7 @@ Mentions of AI or AI companies is NOT AI generated content. If the text is likel
   // Get API key from Chrome storage
   function getApiKey() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['geminiApiKey'], (result) => {
+      chrome.storage.local.get(["geminiApiKey"], (result) => {
         resolve(result.geminiApiKey || null);
       });
     });
@@ -186,9 +196,8 @@ Mentions of AI or AI companies is NOT AI generated content. If the text is likel
     analyzeContent,
     getApiKey,
     setApiKey,
-    hasApiKey
+    hasApiKey,
   };
 
-  console.log('🚀 GEMINI SERVICE EXPORTED TO WINDOW:', window.GeminiService);
-
+  console.log("🚀 GEMINI SERVICE EXPORTED TO WINDOW:", window.GeminiService);
 })();
