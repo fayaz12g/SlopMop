@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkApiKeyStatus();
 
   // Try to load and display cached results from last scan
-  loadCachedResults();
+  // loadCachedResults();
 
   // View switching
   if (settingsBtn) settingsBtn.addEventListener('click', showSettings);
@@ -424,10 +424,10 @@ function displayResults(results) {
     return;
   }
 
-  // Save results to storage for persistence
-  chrome.storage.local.set({ lastScanResults: results }, () => {
-    console.log('🔌 POPUP: Saved scan results to storage');
-  });
+  // // Save results to storage for persistence
+  // chrome.storage.local.set({ lastScanResults: results }, () => {
+  //   console.log('🔌 POPUP: Saved scan results to storage');
+  // });
   
   // Hide scanning, show results
   scanningDiv.classList.add('hidden');

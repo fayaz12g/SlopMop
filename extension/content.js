@@ -39,14 +39,19 @@
   // Clear any existing highlights and labels
   function clearHighlights() {
     document.querySelectorAll('.scanner-highlight').forEach(el => {
-      el.classList.remove('scanner-highlight', 'scanner-malicious', 'scanner-trackers', 'scanner-ai', 'scanner-misinformation');
-      // Remove any attached labels
-      const label = el.querySelector('.scanner-label');
-      if (label) label.remove();
+      el.classList.remove(
+        'scanner-highlight',
+        'scanner-malicious',
+        'scanner-trackers',
+        'scanner-ai',
+        'scanner-misinformation'
+      );
     });
-    // Remove any orphaned tooltips
+
+    document.querySelectorAll('.scanner-label').forEach(label => label.remove());
     document.querySelectorAll('.scanner-tooltip').forEach(tooltip => tooltip.remove());
   }
+
 
   // Extract content elements for analysis
   function extractContentElements() {
@@ -310,17 +315,24 @@
 
   // Highlight an element and add interactive label
   function highlightElement(element, type, reason, confidence) {
-    element.classList.add('scanner-highlight', `scanner-${type}`);
-    
-    // Generate unique ID for this element
-    const elementId = `scanner-element-${elementIdCounter++}`;
-    element.setAttribute('data-scanner-id', elementId);
-    
-    // Create label element
-    const label = createLabel(type, elementId, reason, confidence);
-    
-    element.appendChild(label);
-  }
+  element.classList.add('scanner-highlight', `scanner-${type}`);
+
+  const elementId = `scanner-element-${elementIdCounter++}`;
+  element.setAttribute('data-scanner-id', elementId);
+
+  const label = createLabel(type, elementId, reason, confidence);
+
+  // Position label relative to viewport
+  const rect = element.getBoundingClientRect();
+
+  label.style.position = 'absolute';
+  label.style.top = `${window.scrollY + rect.top - 24}px`;
+  label.style.left = `${window.scrollX + rect.left}px`;
+  label.style.zIndex = '2147483647'; // Max safe z-index
+
+  document.body.appendChild(label);
+}
+
 
   // Create interactive label with hover functionality
   function createLabel(type, elementId, reason, confidence) {
