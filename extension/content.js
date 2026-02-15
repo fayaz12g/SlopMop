@@ -159,6 +159,9 @@
     clearHighlights();
     scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
 
+    // Collect sample items per category for the popup (we'll limit display there)
+    const itemsByCategory = { malicious: [], trackers: [], ai: [], misinformation: [] };
+
     const storageResult = await chrome.storage.local.get(['safeElements']);
     const safeElements = storageResult.safeElements || {};
     const domain = window.location.hostname;
@@ -228,11 +231,25 @@
               if (safeElements[safeKey]) {
                 return;
               }
-              
-              // Add permanent scanner ID for later reference
+              // Add permanent scanner ID for later reference (used by popup to jump)
               const permanentId = `scanner-permanent-${elementIdCounter++}`;
               element.setAttribute('data-scanner-permanent-id', permanentId);
               result.permanentId = permanentId;
+
+              // Save a short sample for the popup (avoid heavy payloads) including permanentId
+              try {
+                const snippet = (element.textContent || '').trim().replace(/\s+/g, ' ').substring(0, 300);
+                if (itemsByCategory[result.category] && itemsByCategory[result.category].length < 50) {
+                  itemsByCategory[result.category].push({
+                    permanentId,
+                    snippet,
+                    reason: result.reason || null,
+                    confidence: result.confidence || null
+                  });
+                }
+              } catch (e) {
+                // ignore snippet extraction errors
+              }
               
               // Only highlight if this threat type is enabled
               const shouldHighlight = !enabledThreats || enabledThreats[result.category] === true;
@@ -267,7 +284,8 @@
 
     console.log('Scan complete:', scanResults);
     console.log('Stored analysis results:', lastAnalysisResults.length);
-    return scanResults;
+    // Return counts plus collected example items (popup will show the first 5)
+    return Object.assign({}, scanResults, { items: itemsByCategory });
   }
 
   // Highlight an element and add interactive label
@@ -504,6 +522,31 @@
         sendResponse(fallbackResults);
       });
 
+      return true;
+    }
+
+    // Jump to element request from popup (smooth scroll + highlight)
+    if (request.action === 'jumpToElement' && request.permanentId) {
+      try {
+        const el = document.querySelector(`[data-scanner-permanent-id="${request.permanentId}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          // Flash outline
+          const prevOutline = el.style.outline;
+          el.style.outline = '4px solid #ffd54f';
+          el.style.transition = 'outline 0.3s ease';
+          setTimeout(() => {
+            el.style.outline = prevOutline || '';
+          }, 2500);
+          sendResponse({ jumped: true });
+        } else {
+          // Not found
+          sendResponse({ jumped: false, error: 'element not found' });
+        }
+      } catch (e) {
+        console.error('Error jumping to element:', e);
+        sendResponse({ jumped: false, error: e.message });
+      }
       return true;
     }
   });
