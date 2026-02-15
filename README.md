@@ -41,10 +41,24 @@ AI-assisted browser extension to mop up the slop and misinformation in your brow
 ## Quick Start
 
 ### Download and Install the Extension
+
 ```bash
 git clone https://github.com/fayaz12g/SlopMop.git
 cd SlopMop/extension
 npm install
+```
+
+* Modify `twelvelabs.js` script
+    * Add TwelveLabs API Key
+    * Configure `yt-dlp` binary path*
+    * Make sure you have `ffmpeg` installed* 
+
+    
+    
+*Required for Linux/MacOS
+
+Then run -
+```bash
 node twelvelabs.js
 ```
 
@@ -63,7 +77,7 @@ node twelvelabs.js
 ### Website
 
 ```bash
-cd website
+cd SlopMop/website
 npm install
 npm run dev
 ```
@@ -75,7 +89,7 @@ Open [http://localhost:3000](http://localhost:3000). See [website/README.md](web
 
 ## API Keys
 
-The browser extension requires an API Key. This is coonfigured in the extension itself, just drop in your Gemini API key!
+The browser extension requires an API Key. This is configured in the extension itself, just drop in your Gemini API key!
 
 <img width="378" height="600" alt="API Keys" src="https://github.com/user-attachments/assets/b3f45a3b-1262-4729-a7ad-205f5f8e46c0" />
 
