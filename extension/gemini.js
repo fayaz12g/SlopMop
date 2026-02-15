@@ -150,7 +150,7 @@ A link to the same site is not considered a tracker by itself.
 - Privacy policy links are NOT trackers
 
 An elementId can only belong to one category. If an element seems to belong to multiple categories, choose the most severe category based on this order: malicious > misinformation > ai > trackers.
-DO NOT attempt to list an elementId twice.
+DO NOT list an elementId twice, regardless of same or different categories.
 
 Respond ONLY with valid JSON in this exact format (no markdown, no additional text):
 {
