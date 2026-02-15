@@ -4,6 +4,8 @@
 
   console.log("🔥 GEMINI.JS LOADED AND RUNNING");
 
+  const today = new Date();
+
   // Gemini API configuration - Updated to correct endpoint
   const GEMINI_API_URL =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-09-2025:generateContent";
@@ -133,7 +135,7 @@ Respond ONLY with valid JSON in this exact format (no markdown, no additional te
     }
   ]
 }
-
+Today's date is ${today.toDateString()}.
 Only include elements that match a category. If an element is safe, don't include it in results. If an element mentions a category, but is not explicitly malicious, trackers, AI, or misinformation, classify it as "safe" and do not include it in results.
 Only include something in the results if it is something a user would not want to interact with. For example, a tool for finding malicious links is helpful and safe, but a link that leads to malware is not safe.
 A database of malicious sites is helpful to a user and not dangerous, but the links within the database are dangerous. A news article that contains misinformation is not safe, but a news article that discusses misinformation is safe.
