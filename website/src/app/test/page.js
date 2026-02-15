@@ -26,6 +26,10 @@ export default function TestPage() {
             Home
           </button>
 
+          <button onClick={() => router.push("/setup")} className="hover:text-white transition">
+            Setup
+          </button>
+
           <a
             href="https://github.com/fayaz12g/SlopMop"
             target="_blank"
