@@ -49,9 +49,9 @@ npm install
 ```
 
 * Modify `twelvelabs.js` script
-    * Add TwelveLabs API Key
-    * Configure `yt-dlp` binary path*
-    * Make sure you have `ffmpeg` installed* 
+    * Add TwelveLabs API Key by modifying `API KEY` in `const client = new TwelveLabs({ apiKey: 'API KEY' });`
+    * Configure `yt-dlp` binary path by modifying the string `yt-dlp-wrap` in `const YTDlpWrap = require('yt-dlp-wrap').default;`*
+    * Install `ffmpeg`* 
 
     
     
