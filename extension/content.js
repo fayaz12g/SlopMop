@@ -149,7 +149,7 @@
 }
 
   // Scan page with Gemini AI and respect enabled threats
-  async function scanPageWithGemini(enabledThreats = null) {
+  async function scanPage(enabledThreats = null) {
     console.log('🔍 Starting Gemini-powered scan...');
     console.log('🔍 Available on window:', Object.keys(window));
     console.log('🔍 GeminiService available:', typeof window.GeminiService);
@@ -215,35 +215,44 @@
         if (analysis.results && Array.isArray(analysis.results)) {
           console.log(`Received ${analysis.results.length} flagged items from batch ${i + 1}`);
           
-          // Store results for dynamic toggle updates
-          lastAnalysisResults = lastAnalysisResults.concat(analysis.results);
-          
-          analysis.results.forEach(result => {
+          // Filter out safe elements BEFORE storing
+          const filteredResults = analysis.results.filter(result => {
             const element = document.querySelector(`[data-scanner-temp-id="${result.elementId}"]`);
-            if (element && result.category) {
-              const elementText = element.textContent.substring(0, 200);
-              const textHash = hashText(elementText);
-              const safeKey = `${domain}:${textHash}`;
-
-              if (safeElements[safeKey]) {
-                return;
-              }
-              
-              // Add permanent scanner ID for later reference
-              const permanentId = `scanner-permanent-${elementIdCounter++}`;
-              element.setAttribute('data-scanner-permanent-id', permanentId);
-              result.permanentId = permanentId;
-              
-              // Only highlight if this threat type is enabled
-              const shouldHighlight = !enabledThreats || enabledThreats[result.category] === true;
-              
-              if (shouldHighlight) {
-                highlightElement(element, result.category, result.reason, result.confidence);
-                scanResults[result.category]++;
-                console.log(`Highlighted ${result.category} element (enabled: ${shouldHighlight})`);
-              } else {
-                console.log(`Skipped highlighting ${result.category} element (disabled in settings)`);
-              }
+            if (!element || !result.category) return false;
+            
+            const elementText = element.textContent.substring(0, 200);
+            const textHash = hashText(elementText);
+            const safeKey = `${domain}:${textHash}`;
+            
+            // Filter out if marked as safe
+            if (safeElements[safeKey]) {
+              console.log(`Skipping safe element: ${safeKey}`);
+              return false;
+            }
+            
+            return true;
+          });
+          
+          // Store only non-safe results for dynamic toggle updates
+          lastAnalysisResults = lastAnalysisResults.concat(filteredResults);
+          
+          filteredResults.forEach(result => {
+            const element = document.querySelector(`[data-scanner-temp-id="${result.elementId}"]`);
+            
+            // Add permanent scanner ID for later reference
+            const permanentId = `scanner-permanent-${elementIdCounter++}`;
+            element.setAttribute('data-scanner-permanent-id', permanentId);
+            result.permanentId = permanentId;
+            
+            // Only highlight if this threat type is enabled
+            const shouldHighlight = !enabledThreats || enabledThreats[result.category] === true;
+            
+            if (shouldHighlight) {
+              highlightElement(element, result.category, result.reason, result.confidence);
+              scanResults[result.category]++;
+              console.log(`Highlighted ${result.category} element (enabled: ${shouldHighlight})`);
+            } else {
+              console.log(`Skipped highlighting ${result.category} element (disabled in settings)`);
             }
           });
         }
@@ -494,7 +503,7 @@
       lastAnalysisResults = [];
       
       // Run scan with Gemini and pass enabled threats
-      scanPageWithGemini(request.enabledThreats).then(results => {
+      scanPage(request.enabledThreats).then(results => {
         console.log('📥 CONTENT: Scan completed, sending results:', results);
         sendResponse(results);
       }).catch(error => {
