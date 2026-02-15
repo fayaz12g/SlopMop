@@ -55,23 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
   checkApiKeyStatus();
 
   // View switching
-  settingsBtn.addEventListener('click', showSettings);
-  backBtn.addEventListener('click', showMain);
+  if (settingsBtn) settingsBtn.addEventListener('click', showSettings);
+  if (backBtn) backBtn.addEventListener('click', showMain);
 
   // reset button listener
   resetSafeBtn.addEventListener('click', resetSafeElements);
 
   // Scan button handler
-  scanBtn.addEventListener('click', () => {
-    scanPage();
-  });
+  if (scanBtn) scanBtn.addEventListener('click', () => { scanPage(); });
 
   // Settings handlers
-  saveBtn.addEventListener('click', saveApiKey);
-  clearBtn.addEventListener('click', clearApiKey);
-  apiKeyInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') saveApiKey();
-  });
+  if (saveBtn) saveBtn.addEventListener('click', saveApiKey);
+  if (clearBtn) clearBtn.addEventListener('click', clearApiKey);
+  if (apiKeyInput) apiKeyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') saveApiKey(); });
 
   // Safety timeout: if still scanning after 3 seconds, show API key warning
   setTimeout(() => {
@@ -264,6 +260,7 @@ function updateToggleUI() {
 // Add listeners to different toggle switches
 function addToggleListeners() {
   Object.entries(threatToggles).forEach(([key, toggle]) => {
+    if (!toggle) return;
     toggle.addEventListener('change', (e) => {
       toggleStates[key] = e.target.checked;
       chrome.storage.local.set({ threatToggles: toggleStates });
@@ -411,10 +408,105 @@ function displayResults(results) {
   misinformationCount.textContent = `${misinformation} item${misinformation !== 1 ? 's' : ''} found`;
 
   // Show/hide sections based on findings and toggle state
-  maliciousSection.style.display = (malicious > 0 && toggleStates.malicious) ? 'block' : 'none';
-  trackersSection.style.display = (trackers > 0 && toggleStates.trackers) ? 'block' : 'none';
-  aiSection.style.display = (ai > 0 && toggleStates.ai) ? 'block' : 'none';
-  misinformationSection.style.display = (misinformation > 0 && toggleStates.misinformation) ? 'block' : 'none';
+  if (maliciousSection) maliciousSection.style.display = (malicious > 0 && toggleStates.malicious) ? 'block' : 'none';
+  if (trackersSection) trackersSection.style.display = (trackers > 0 && toggleStates.trackers) ? 'block' : 'none';
+  if (aiSection) aiSection.style.display = (ai > 0 && toggleStates.ai) ? 'block' : 'none';
+  if (misinformationSection) misinformationSection.style.display = (misinformation > 0 && toggleStates.misinformation) ? 'block' : 'none';
+
+  // Helper to render first up to 5 examples for a category
+  function renderExamplesForCategory(category, containerId, toggleBtnId) {
+    let container = document.getElementById(containerId);
+    let toggleBtn = document.getElementById(toggleBtnId);
+    // If elements don't exist (older popup markup), create them
+    const sectionMap = {
+      malicious: 'maliciousSection',
+      trackers: 'trackersSection',
+      ai: 'aiSection',
+      misinformation: 'misinformationSection'
+    };
+    const parentSection = document.getElementById(sectionMap[category]);
+    if (parentSection && !toggleBtn) {
+      toggleBtn = document.createElement('button');
+      toggleBtn.className = 'examples-toggle';
+      toggleBtn.id = toggleBtnId;
+      parentSection.appendChild(toggleBtn);
+    }
+    if (parentSection && !container) {
+      container = document.createElement('div');
+      container.className = 'examples-list hidden';
+      container.id = containerId;
+      parentSection.appendChild(container);
+    }
+    // Clear existing
+    if (!container) return;
+    container.innerHTML = '';
+
+    const items = (results.items && results.items[category]) ? results.items[category] : [];
+    const total = items.length;
+    const shown = Math.min(5, total);
+
+    if (total === 0) {
+      if (container) container.innerHTML = '<div class="example-empty">No examples</div>';
+      if (toggleBtn) toggleBtn.style.display = 'none';
+      console.log(`Popup: no examples for ${category}`);
+      return;
+    }
+
+    if (toggleBtn) {
+      toggleBtn.style.display = 'inline-block';
+      toggleBtn.textContent = `Threats Found (${shown})`;
+      // Ensure toggle hides/shows the container
+      toggleBtn.onclick = () => {
+        const hidden = container.classList.toggle('hidden');
+        toggleBtn.textContent = hidden ? `Threats Found (${shown})` : `Hide Threats (${shown})`;
+      };
+    }
+
+    // Render the first N items as streamlined entries with a Jump button
+    const list = document.createElement('div');
+    list.className = 'examples-list-inner';
+    for (let i = 0; i < shown; i++) {
+      const it = items[i];
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'example-item';
+
+      const label = document.createElement('div');
+      label.className = 'example-label';
+      label.textContent = `Item ${i + 1}`;
+      label.title = it.reason || '';
+      itemDiv.appendChild(label);
+
+      const jumpBtn = document.createElement('button');
+      jumpBtn.className = 'example-jump-btn';
+      jumpBtn.textContent = 'Jump';
+      jumpBtn.onclick = async () => {
+        try {
+          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          if (!tab) return;
+          const response = await chrome.tabs.sendMessage(tab.id, { action: 'jumpToElement', permanentId: it.permanentId });
+          console.log('Jump response:', response);
+        } catch (e) {
+          console.error('Error sending jumpToElement message:', e);
+        }
+      };
+
+      itemDiv.appendChild(jumpBtn);
+      list.appendChild(itemDiv);
+    }
+    container.appendChild(list);
+    // Keep container hidden until user toggles
+    container.classList.add('hidden');
+  }
+
+  // Render examples for each category
+  try {
+    renderExamplesForCategory('malicious', 'maliciousExamples', 'maliciousToggleBtn');
+    renderExamplesForCategory('trackers', 'trackersExamples', 'trackersToggleBtn');
+    renderExamplesForCategory('ai', 'aiExamples', 'aiToggleBtn');
+    renderExamplesForCategory('misinformation', 'misinformationExamples', 'misinformationToggleBtn');
+  } catch (e) {
+    console.warn('Error rendering examples:', e);
+  }
 
   // Calculate visible total based on enabled threats
   let visibleTotal = 0;
