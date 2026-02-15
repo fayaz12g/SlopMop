@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadApiKey();
   checkApiKeyStatus();
 
-  // Try to load and display cached results from last scan (nope!)
-  // loadCachedResults();
+  // Try to load and display cached results or resume scans in progress
+  loadCachedResults();
 
   // View switching
   if (settingsBtn) settingsBtn.addEventListener('click', showSettings);
@@ -80,18 +80,55 @@ function showSettings() {
   loadApiKey(); // Refresh API key display
 }
 
-// Load and display cached scan results from last scan
-function loadCachedResults() {
-  chrome.storage.local.get(['lastScanResults'], (result) => {
-    if (result.lastScanResults) {
-      console.log('🔌 POPUP: Found cached scan results, displaying...');
-      // Show the results without triggering a new scan
-      scanSection.classList.add('hidden');
-      scanningDiv.classList.add('hidden');
-      resultsDiv.classList.remove('hidden');
-      displayResults(result.lastScanResults);
+// Load and display cached scan results or check for scan in progress
+async function loadCachedResults() {
+  try {
+    // Get current tab
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    // Skip internal pages
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('about:')) {
+      return;
     }
-  });
+    
+    try {
+      // Check if there's a scan in progress
+      const status = await chrome.tabs.sendMessage(tab.id, { action: 'checkScanStatus' });
+      
+      if (status.inProgress) {
+        console.log('🔌 POPUP: Found scan in progress, resuming...');
+        // Show scanning state and start polling
+        scanSection.classList.add('hidden');
+        resultsDiv.classList.add('hidden');
+        scanningDiv.classList.remove('hidden');
+        updateScanProgress('Resuming scan in progress...', 0);
+        pollForScanResults(tab.id);
+        return;
+      } else if (status.results) {
+        console.log('🔌 POPUP: Found completed scan results, displaying...');
+        scanSection.classList.add('hidden');
+        scanningDiv.classList.add('hidden');
+        resultsDiv.classList.remove('hidden');
+        displayResults(status.results);
+        return;
+      }
+    } catch (error) {
+      console.log('🔌 POPUP: No content script available or no scan data');
+    }
+    
+    // Fallback to storage check
+    chrome.storage.local.get(['lastScanResults'], (result) => {
+      if (result.lastScanResults) {
+        console.log('🔌 POPUP: Found stored scan results, displaying...');
+        scanSection.classList.add('hidden');
+        scanningDiv.classList.add('hidden');
+        resultsDiv.classList.remove('hidden');
+        displayResults(result.lastScanResults);
+      }
+    });
+  } catch (error) {
+    console.error('🔌 POPUP: Error loading cached results:', error);
+  }
 }
 
 function showMain() {
@@ -380,23 +417,85 @@ async function scanPage() {
     setTimeout(async () => {
       try {
         console.log('🔌 POPUP: Sending getScanResults message to tab', tab.id);
-        // Get results from content script
-        const results = await chrome.tabs.sendMessage(tab.id, { 
+        // Start scan (or check if already running)
+        const response = await chrome.tabs.sendMessage(tab.id, { 
           action: 'getScanResults',
           enabledThreats: toggleStates
         });
         
-        console.log('🔌 POPUP: Received scan results:', results);
-        displayResults(results);
+        console.log('🔌 POPUP: Received scan response:', response);
+        
+        if (response.scanStarted) {
+          // New scan started, begin polling for results
+          console.log('🔌 POPUP: New scan started, polling for results...');
+          pollForScanResults(tab.id);
+        } else if (response.scanInProgress) {
+          // Scan already in progress, continue polling
+          console.log('🔌 POPUP: Scan already in progress, continuing to poll...');
+          pollForScanResults(tab.id);
+        } else {
+          // Direct results (shouldn't happen with new system, but handle gracefully)
+          console.log('🔌 POPUP: Received direct results:', response);
+          displayResults(response);
+        }
       } catch (error) {
-        console.error('🔌 POPUP ERROR getting scan results:', error);
-        displayError('Scan failed. Please try again.');
+        console.error('🔌 POPUP ERROR starting scan:', error);
+        displayError('Failed to start scan. Please try again.');
       }
     }, 500);
   } catch (error) {
     console.error('Error scanning page:', error);
     displayError('Unable to scan this page');
   }
+}
+
+// Poll for scan results when scan is running asynchronously
+async function pollForScanResults(tabId) {
+  console.log('🔌 POPUP: Starting poll for scan results');
+  
+  const pollInterval = setInterval(async () => {
+    try {
+      const status = await chrome.tabs.sendMessage(tabId, { action: 'checkScanStatus' });
+      console.log('🔌 POPUP: Poll status:', status);
+      
+      // Update progress if available
+      if (status.totalBatches > 0) {
+        const progress = Math.round((status.completedBatches / status.totalBatches) * 100);
+        updateScanProgress(`Processing batch ${status.completedBatches + 1} of ${status.totalBatches}...`, progress);
+      }
+      
+      if (!status.inProgress) {
+        // Scan completed
+        clearInterval(pollInterval);
+        console.log('🔌 POPUP: Scan completed, displaying results');
+        
+        if (status.results) {
+          displayResults(status.results);
+        } else if (status.error) {
+          displayError(`Scan failed: ${status.error}`);
+        } else {
+          // Try to get stored results as fallback
+          try {
+            const storedResults = await chrome.tabs.sendMessage(tabId, { action: 'getStoredResults' });
+            displayResults(storedResults);
+          } catch (error) {
+            displayError('Scan completed but results unavailable');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('🔌 POPUP: Error polling scan status:', error);
+      clearInterval(pollInterval);
+      displayError('Lost connection to scan process');
+    }
+  }, 1000); // Poll every second
+  
+  // Safety timeout to prevent infinite polling
+  setTimeout(() => {
+    clearInterval(pollInterval);
+    console.log('🔌 POPUP: Poll timeout reached');
+    displayError('Scan timed out. Please try again.');
+  }, 120000); // 2 minute timeout
 }
 
 function displayResults(results) {

@@ -25,6 +25,33 @@
     misinformation: true
   };
 
+  const currentScanState = {
+    inProgress: false,
+    scanId: null,
+    startTime: null,
+    completedBatches: 0,
+    totalBatches: 0,
+    results: null,
+    error: null
+  };
+  
+  // Function to completely reset scan state
+  function resetScanState() {
+    console.log('🗑️ Resetting scan state');
+    currentScanState.inProgress = false;
+    currentScanState.scanId = null;
+    currentScanState.startTime = null;
+    currentScanState.completedBatches = 0;
+    currentScanState.totalBatches = 0;
+    currentScanState.results = null;
+    currentScanState.error = null;
+    
+    // Clear from chrome storage
+    chrome.storage.local.remove(['currentScanState', 'lastScanResults'], () => {
+      console.log('🗑️ Cleared scan state from storage');
+    });
+  }
+
   // Category descriptions for tooltips
   const DESCRIPTIONS = {
     malicious: 'This content has been flagged as potentially malicious by AI analysis. It may contain phishing attempts, malware distribution, scams, or other security threats.',
@@ -173,7 +200,8 @@
     console.log('🔍 Available on window:', Object.keys(window));
     console.log('🔍 GeminiService available:', typeof window.GeminiService);
     console.log('🔍 Enabled threats:', enabledThreats);
-    const thisScanId = ++activeScanId;
+    
+    const currentScanId = currentScanState.scanId;
     
     // Clear previous results
     clearHighlights();
@@ -243,8 +271,8 @@
         totalBatches: batches.length
       });
       
-      // Abort if a newer scan started
-      if (thisScanId !== activeScanId) {
+      // Abort if a newer scan started (check by scanId)
+      if (currentScanId !== currentScanState.scanId) {
         console.log('⛔ Aborting outdated scan');
         return scanResults;
       }
@@ -329,13 +357,18 @@
         console.error(`Error processing batch ${i + 1}:`, error);
       }
 
+      // Update scan state progress after each batch
+      currentScanState.completedBatches = i + 1;
+      chrome.storage.local.set({ currentScanState });
+
       // Small delay between batches to avoid rate limits
       if (i < batches.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
-    // Send final completion message to popup
+    // Send final completion message to popup (commented out - no background script)
+    /*
     chrome.runtime.sendMessage({
       action: 'scanProgress',
       message: `Scan completed! Analyzed ${contentElements.length} elements`,
@@ -344,6 +377,7 @@
       totalBatches: batches.length,
       completed: true
     });
+    */
 
     // Clean up temporary IDs but keep permanent ones
     document.querySelectorAll('[data-scanner-temp-id]').forEach(el => {
@@ -602,6 +636,7 @@ function createTooltip(type, elementId, reason, confidence) {
       clearHighlights();
       scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
       lastAnalysisResults = []; // Clear stored results too
+      resetScanState(); // Also reset scan state
       sendResponse({ cleared: true });
       return true;
     }
@@ -610,17 +645,96 @@ function createTooltip(type, elementId, reason, confidence) {
       console.log('📥 CONTENT: Starting scan with Gemini...');
       console.log('📥 CONTENT: Enabled threats:', request.enabledThreats);
       
-      // Run scan with Gemini and pass enabled threats
+      // Check if scan is already in progress
+      if (currentScanState.inProgress) {
+        console.log('📥 CONTENT: Scan already in progress, returning current state');
+        sendResponse({ 
+          scanInProgress: true, 
+          scanId: currentScanState.scanId,
+          completedBatches: currentScanState.completedBatches,
+          totalBatches: currentScanState.totalBatches
+        });
+        return true;
+      }
+      
+      // Reset scan state for new scan (clears any stale state)
+      resetScanState();
+      
+      // Start new scan
+      currentScanState.inProgress = true;
+      currentScanState.scanId = Date.now().toString();
+      currentScanState.startTime = Date.now();
+      currentScanState.results = null;
+      currentScanState.error = null;
+      
+      // Store scan state in chrome.storage
+      chrome.storage.local.set({ currentScanState }, () => {
+        console.log('📥 CONTENT: Stored scan state in storage');
+      });
+      
+      // Immediately respond that scan started
+      sendResponse({ 
+        scanStarted: true, 
+        scanId: currentScanState.scanId 
+      });
+      
+      // Run scan asynchronously (continues even if popup closes)
       scanPage(request.enabledThreats).then(results => {
-        console.log('📥 CONTENT: Scan completed, sending results:', results);
-        sendResponse(results);
+        console.log('📥 CONTENT: Scan completed, storing results:', results);
+        
+        // Update scan state
+        currentScanState.inProgress = false;
+        currentScanState.results = results;
+        currentScanState.completedBatches = currentScanState.totalBatches;
+        
+        // Store final results in chrome.storage
+        chrome.storage.local.set({ 
+          currentScanState,
+          lastScanResults: results 
+        }, () => {
+          console.log('📥 CONTENT: Stored final scan results in storage');
+        });
+        
       }).catch(error => {
         console.error('📥 CONTENT: Scan error:', error);
+        
+        // Update scan state with error
+        currentScanState.inProgress = false;
+        currentScanState.error = error.message;
+        
         const fallbackResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
-        console.log('📥 CONTENT: Sending fallback results:', fallbackResults);
-        sendResponse(fallbackResults);
+        currentScanState.results = fallbackResults;
+        
+        // Store error state in chrome.storage
+        chrome.storage.local.set({ 
+          currentScanState,
+          lastScanResults: fallbackResults 
+        }, () => {
+          console.log('📥 CONTENT: Stored error scan results in storage');
+        });
       });
 
+      return true;
+    }
+
+    // Check scan status - for popup to poll current scan state
+    if (request.action === 'checkScanStatus') {
+      sendResponse({
+        inProgress: currentScanState.inProgress,
+        scanId: currentScanState.scanId,
+        completedBatches: currentScanState.completedBatches,
+        totalBatches: currentScanState.totalBatches,
+        results: currentScanState.results,
+        error: currentScanState.error
+      });
+      return true;
+    }
+    
+    // Get stored scan results
+    if (request.action === 'getStoredResults') {
+      chrome.storage.local.get(['lastScanResults'], (result) => {
+        sendResponse(result.lastScanResults || { malicious: 0, trackers: 0, ai: 0, misinformation: 0 });
+      });
       return true;
     }
 
@@ -649,4 +763,26 @@ function createTooltip(type, elementId, reason, confidence) {
       return true;
     }
   });
+  
+  // Initialize/reset scan state when page loads
+  // This ensures scan state doesn't persist across page refreshes or navigation
+  function initializePage() {
+    console.log('🎆 Content script initializing for new page');
+    resetScanState();
+    clearHighlights();
+    scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+    lastAnalysisResults = [];
+  }
+  
+  // Run initialization when page is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializePage);
+  } else {
+    // Document already loaded, initialize immediately
+    initializePage();
+  }
+  
+  // Also initialize on page show (handles back/forward navigation)
+  window.addEventListener('pageshow', initializePage);
+  
 })();
