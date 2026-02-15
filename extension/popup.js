@@ -488,9 +488,26 @@ function displayResults(results) {
 
       const label = document.createElement('div');
       label.className = 'example-label';
-      label.textContent = `Item ${i + 1}`;
+      // Show only the threat level (derived from confidence) as the visible label
+      const confVal = (typeof it.confidence === 'number') ? it.confidence : (it.confidence ? Number(it.confidence) : null);
+      let threatLevel = 'Unknown';
+      if (confVal !== null && !isNaN(confVal)) {
+        if (confVal >= 0.8) threatLevel = 'High';
+        else if (confVal >= 0.5) threatLevel = 'Medium';
+        else threatLevel = 'Low';
+      }
+      label.textContent = threatLevel;
+      // Hover shows the AI reason if available (no snippet)
       label.title = it.reason || '';
       itemDiv.appendChild(label);
+
+      // Optional confidence indicator
+      if (it.confidence) {
+        const conf = document.createElement('div');
+        conf.className = 'example-confidence';
+        conf.textContent = `Confidence: ${Math.round((it.confidence || 0) * 100)}%`;
+        itemDiv.appendChild(conf);
+      }
 
       const jumpBtn = document.createElement('button');
       jumpBtn.className = 'example-jump-btn';
@@ -499,10 +516,41 @@ function displayResults(results) {
         try {
           const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
           if (!tab) return;
-          const response = await chrome.tabs.sendMessage(tab.id, { action: 'jumpToElement', permanentId: it.permanentId });
-          console.log('Jump response:', response);
+
+          // First try: ask content script to jump (preferred)
+          try {
+            const response = await chrome.tabs.sendMessage(tab.id, { action: 'jumpToElement', permanentId: it.permanentId });
+            console.log('Jump response from content script:', response);
+            if (response && response.jumped) return;
+          } catch (msgErr) {
+            console.warn('Jump message to content script failed, will try fallback executeScript', msgErr);
+          }
+
+          // Fallback: inject a small script into the page to find the element and scroll to it.
+          try {
+            await chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              func: (pid) => {
+                try {
+                  const el = document.querySelector(`[data-scanner-permanent-id="${pid}"]`);
+                  if (!el) return { jumped: false, error: 'not-found' };
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                  const prevOutline = el.style.outline;
+                  el.style.outline = '4px solid #ffd54f';
+                  setTimeout(() => { el.style.outline = prevOutline || ''; }, 2500);
+                  return { jumped: true };
+                } catch (e) {
+                  return { jumped: false, error: e && e.message };
+                }
+              },
+              args: [it.permanentId]
+            });
+            console.log('Fallback jump executed via scripting API');
+          } catch (execErr) {
+            console.error('Fallback executeScript jump failed:', execErr);
+          }
         } catch (e) {
-          console.error('Error sending jumpToElement message:', e);
+          console.error('Error during jump handling:', e);
         }
       };
 
@@ -531,6 +579,19 @@ function displayResults(results) {
   if (toggleStates.ai) visibleTotal += ai;
   if (toggleStates.misinformation) visibleTotal += misinformation;
 
+  // Create or get disclaimer element dynamically
+  let disclaimerEl = document.getElementById('resultsDisclaimer');
+  if (!disclaimerEl) {
+    disclaimerEl = document.createElement('div');
+    disclaimerEl.id = 'resultsDisclaimer';
+    disclaimerEl.className = 'disclaimer hidden';
+    disclaimerEl.textContent = 'Note: only the first 5 results per threat category are shown here.';
+    const findings = document.querySelector('.findings');
+    if (findings && findings.parentNode) {
+      findings.parentNode.insertBefore(disclaimerEl, findings.nextSibling);
+    }
+  }
+
   // Update status indicator
   if (visibleTotal === 0) {
     // All clear
@@ -538,12 +599,14 @@ function displayResults(results) {
     checkIcon.classList.remove('hidden');
     warningIcon.classList.add('hidden');
     statusText.textContent = 'All Clear!';
+    if (disclaimerEl) disclaimerEl.classList.add('hidden');
   } else {
     // Issues found
     statusIndicator.className = 'status-indicator status-warning';
     checkIcon.classList.add('hidden');
     warningIcon.classList.remove('hidden');
     statusText.textContent = `${visibleTotal} Issue${visibleTotal !== 1 ? 's' : ''} Found`;
+    if (disclaimerEl) disclaimerEl.classList.remove('hidden');
   }
 }
 

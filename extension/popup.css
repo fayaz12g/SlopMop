@@ -410,11 +410,22 @@
   font-size: 11px;
 }
 
+.slopmop-popup-container .example-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .slopmop-popup-container .example-label {
   display: inline-block;
   font-weight: 600;
   color: #e6d7b0;
   margin-right: 8px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .slopmop-popup-container .example-jump-btn {
@@ -429,6 +440,28 @@
 
 .slopmop-popup-container .example-jump-btn:hover {
   background: linear-gradient(135deg,#a08464,#8b7355);
+}
+
+.slopmop-popup-container .example-confidence {
+  display: inline-block;
+  margin-left: 8px;
+  color: #bdbdbd;
+  font-size: 11px;
+}
+
+.slopmop-popup-container .disclaimer {
+  padding: 12px;
+  background: rgba(139, 115, 85, 0.2);
+  border: 1px solid #8b7355;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #c9a96e;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.slopmop-popup-container .disclaimer.hidden {
+  display: none;
 }
 
 .slopmop-popup-container .rescan-btn {
