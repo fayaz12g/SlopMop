@@ -493,8 +493,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           <span class="finding-title">Videos Detected</span>
         </div>
         <div class="finding-content">
-          <p class="video-count" style="margin-bottom: 10px; font-weight: bold;">${request.count} video${request.count !== 1 ? 's' : ''} found on page</p>
+          <p class="video-count" style="margin-bottom: 10px; font-weight: bold;">${request.count} video${request.count !== 1 ? 's' : ''} found on this page</p>
           <div class="video-list-wrapper">${videosHtml}</div>
+        </div>
+      `;
+      findings.appendChild(videoSection);
+
+      videoSection.innerHTML = `
+        <div class="finding-header">
+          <span class="finding-icon">🎬</span>
+          <span class="finding-title">Videos Detected</span>
+        </div>
+        <div class="finding-content">
+          ${request.count > 0 
+            ? `<p class="video-count" style="margin-bottom: 10px; font-weight: bold;">
+                ${request.count} video${request.count !== 1 ? 's' : ''} found on this page
+              </p>
+              <div class="video-list-wrapper">${videosHtml}</div>`
+            : `<p class="video-count" style="margin-bottom: 10px; font-weight: normal; color: #888;">
+                Please play a video to analyze for AI.
+              </p>`
+          }
         </div>
       `;
       findings.appendChild(videoSection);
