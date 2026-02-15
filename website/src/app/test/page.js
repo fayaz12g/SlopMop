@@ -1,62 +1,202 @@
+"use client";
+
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+
 export default function TestPage() {
+  const router = useRouter();
+
   return (
-    <div className="min-h-screen bg-[#14100c] text-[#f3e7d0] px-6 py-16 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-[#c9a96e] mb-10">
-          SlopMop Test Page
+    <div className="min-h-screen bg-gradient-to-br from-[#1a1410] via-[#231a13] to-[#0f0c09] text-[#f3e7d0] font-sans">
+      
+      {/* NAV */}
+      <nav className="flex items-center justify-between px-8 py-6 border-b border-[#3a2b1d]">
+        <div className="flex items-center gap-4">
+          <Image src="/icon.png" alt="SlopMop Icon" width={42} height={42} />
+          <h5 className="text-2xl font-bold tracking-wide text-[#c9a96e]">
+            SlopMop
+          </h5>
+        </div>
+
+        <div className="flex gap-6 text-sm text-[#c9a96e]">
+          <button
+            onClick={() => router.push("/")}
+            className="hover:text-white transition"
+          >
+            Home
+          </button>
+
+          <a
+            href="https://github.com/fayaz12g/SlopMop"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition"
+          >
+            GitHub
+          </a>
+        </div>
+      </nav>
+
+      {/* HEADER */}
+      <section className="text-center px-8 py-20">
+        <h1 className="text-5xl font-extrabold text-[#c9a96e] drop-shadow-lg">
+          🧪 SlopMop Test Page
         </h1>
+        <p className="mt-6 max-w-2xl mx-auto text-[#d8c7a2]">
+          Open the SlopMop extension while viewing this page.
+          It should detect malicious links, trackers, AI-generated content,
+          misinformation, and embedded videos.
+        </p>
+      </section>
+
+      <div className="max-w-5xl mx-auto px-8 pb-24 space-y-16">
 
         <InfoBox />
 
         <Section title="✅ Safe Content">
-          <p>This is completely normal and safe text.</p>
-          <p>This paragraph contains regular verified information.</p>
+          <p>This is completely normal and safe text. Nothing suspicious here.</p>
+          <p>This paragraph contains verified, well-researched information.</p>
           <p>
-            <a href="https://example.com" className="text-[#c9a96e] underline">
+            <a
+              href="https://example.com"
+              className="text-[#c9a96e] underline"
+            >
               This is a normal link to Example.com
             </a>
           </p>
+          <p>We use industry-standard security practices to protect data.</p>
         </Section>
 
-        <Section title="🚨 Malicious Content (RED)">
+        <Section title="🚨 Malicious Content (RED - Should be flagged)">
           <p>Be careful! This is malicious content that could harm your computer.</p>
-          <p>Click here to download a file - <a href="#">this is malicious link</a></p>
-          <p>Warning: this link leads to dangerous website content.</p>
+          <p>
+            Click here to download free movies —{" "}
+            <a href="http://suspicious-site.ru/malware.exe" className="underline">
+              Download Now
+            </a>
+          </p>
+          <p>
+            URGENT: Your account has been compromised! Verify immediately or lose access forever.
+          </p>
+          <p>
+            Congratulations! You've won a free iPhone. Claim your prize now.
+          </p>
+          <p>Your password will expire in 24 hours. Update your credentials immediately.</p>
         </Section>
 
-        <Section title="🧠 AI Generated (PURPLE)">
-          <p>This article was written by an AI. This is AI generated content.</p>
+        <Section title="📡 Trackers / Analytics (BLUE - Should be flagged)">
+          <p>We use third-party analytics to track visitor behavior.</p>
+          <p>This website uses Google Analytics to monitor engagement.</p>
+          <p>Advertising partners use tracking pixels for measurement.</p>
+
+          {/* Hidden tracking pixels */}
+          <img
+            src="https://www.google-analytics.com/collect?v=1&t=pageview"
+            alt=""
+            className="hidden"
+          />
+          <img
+            src="https://www.facebook.com/tr?id=123456789"
+            alt=""
+            className="hidden"
+          />
         </Section>
 
-        <Section title="⚠️ Misinformation (YELLOW)">
-          <p>The following statement contains this is false information: The moon is made of cheese.</p>
-          <p>This paragraph discusses misinformation spreading online.</p>
+        <Section title="🤖 AI-Generated Content (PURPLE - Should be flagged)">
+          <p>
+            This article was entirely written by an artificial intelligence
+            system without human oversight.
+          </p>
+          <p>
+            The following content appears to be generated by AI due to its
+            generic phrasing and consistent tone.
+          </p>
+          <p>
+            Automated content generation produces predictable patterns and
+            formulaic structure.
+          </p>
         </Section>
 
-        <Section title="🔍 Tracker Indicators (BLUE)">
-          <p>This page contains suspicious tracking behavior and data collection patterns.</p>
+        <Section title="❌ Misinformation (YELLOW - Should be flagged)">
+          <p>
+            BREAKING: Scientists have discovered that drinking bleach cures
+            all diseases.
+          </p>
+          <p>
+            Update: The earth is flat and space images are CGI fabrications.
+          </p>
+          <p>
+            5G towers are spreading viruses according to hidden reports.
+          </p>
         </Section>
 
-        <div className="mt-16 p-6 bg-[#1e1712] border border-[#3a2b1d] rounded-xl">
-          <h3 className="text-xl text-[#c9a96e] mb-4">Expected Results</h3>
-          <ul className="list-disc pl-6 space-y-2 text-[#d8c7a2]">
-            <li>Red highlights for malicious content</li>
-            <li>Purple highlights for AI content</li>
-            <li>Yellow highlights for misinformation</li>
-            <li>Blue highlights for trackers</li>
-            <li>Safe content remains untouched</li>
+        <Section title="🎬 Video Content (Should be detected)">
+          <p>Embedded video below should be detected:</p>
+          <div className="mt-4 aspect-video">
+            <iframe
+              className="w-full h-full rounded-xl border border-[#3a2b1d]"
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </Section>
+
+        <Section title="🔀 Mixed Content">
+          <p>
+            This paragraph starts normal but mentions AI generated content in the middle.
+          </p>
+          <p>
+            Some legitimate information here, but this is malicious and should be avoided.
+          </p>
+          <p>
+            The discussion about misinformation is important, but false claims
+            about election fraud are misleading.
+          </p>
+        </Section>
+
+        <Section title="✅ Discussions About Threats (Should NOT be flagged)">
+          <p>
+            Learn how to protect yourself from phishing scams.
+          </p>
+          <p>
+            This guide explains how to identify misinformation using fact-checking.
+          </p>
+          <p>
+            Researchers study AI-generated content to improve detection systems.
+          </p>
+        </Section>
+
+        {/* Expected Results */}
+        <div className="p-8 bg-[#1e1712] border border-[#3a2b1d] rounded-2xl">
+          <h3 className="text-2xl text-[#c9a96e] mb-6">
+            Expected Results
+          </h3>
+          <ul className="list-disc pl-6 space-y-3 text-[#d8c7a2]">
+            <li>🔴 Red highlights for malicious content</li>
+            <li>🟣 Purple highlights for AI-generated content</li>
+            <li>🟡 Yellow highlights for misinformation</li>
+            <li>🔵 Blue highlights for trackers</li>
+            <li>🎬 Video detected in extension popup</li>
+            <li>Safe discussion content remains untouched</li>
           </ul>
         </div>
       </div>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#3a2b1d] py-8 text-center text-sm text-[#8a735c]">
+        © {new Date().getFullYear()} SlopMop — Built to fight digital grime.
+      </footer>
     </div>
   );
 }
 
 function Section({ title, children }) {
   return (
-    <div className="mb-12 p-8 bg-[#1e1712] border border-[#3a2b1d] rounded-2xl">
-      <h2 className="text-2xl text-[#e6c889] mb-4">{title}</h2>
-      <div className="space-y-3 text-[#d8c7a2]">
+    <div className="p-10 bg-[#1e1712] border border-[#3a2b1d] rounded-2xl hover:border-[#c9a96e] transition shadow-lg">
+      <h2 className="text-2xl text-[#e6c889] mb-6">
+        {title}
+      </h2>
+      <div className="space-y-4 text-[#d8c7a2] leading-relaxed">
         {children}
       </div>
     </div>
@@ -65,10 +205,10 @@ function Section({ title, children }) {
 
 function InfoBox() {
   return (
-    <div className="mb-12 p-6 border-l-4 border-[#c9a96e] bg-[#231a13] rounded">
+    <div className="p-6 border-l-4 border-[#c9a96e] bg-[#231a13] rounded-lg shadow-md">
       <strong className="text-[#c9a96e]">Instructions:</strong> Open the
       SlopMop extension while viewing this page. It should detect and
-      highlight suspicious content.
+      highlight suspicious content accurately by category.
     </div>
   );
 }
