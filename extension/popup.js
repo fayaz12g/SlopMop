@@ -710,22 +710,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         `).join('');
       }
       
-      videoSection.innerHTML = `
-        <div class="finding-header">
-          <span class="finding-icon">🎬</span>
-          <span class="finding-title">Videos Detected</span>
-        </div>
-        <div class="finding-content">
-          <p class="video-count" style="margin-bottom: 10px; font-weight: bold;">${request.count} video${request.count !== 1 ? 's' : ''} found on this page</p>
-          <div class="video-list-wrapper">${videosHtml}</div>
-        </div>
-      `;
-      findings.appendChild(videoSection);
+      // videoSection.innerHTML = `
+      //   <div class="finding-header">
+      //     <span class="finding-icon">🎬</span>
+      //     <span class="finding-title">Videos Detected</span>
+      //   </div>
+      //   <div class="finding-content">
+      //     <p class="video-count" style="margin-bottom: 10px; font-weight: bold;">${request.count} video${request.count !== 1 ? 's' : ''} found on this page</p>
+      //     <div class="video-list-wrapper">${videosHtml}</div>
+      //   </div>
+      // `;
+      // findings.appendChild(videoSection);
 
       videoSection.innerHTML = `
-        <div class="finding-header">
-          <span class="finding-icon">🎬</span>
-          <span class="finding-title">Videos Detected</span>
+        <div class="finding-header" style="display: flex; align-items: center; margin-bottom: 10px;">
+          <span class="finding-icon" style="font-size: 1.2em;">🎬</span>
+          <span class="finding-title" style="font-size: 18px; font-weight: 600; margin-left: 8px; color: #ececec;">
+            Videos
+          </span>
         </div>
         <div class="finding-content">
           ${request.count > 0 
