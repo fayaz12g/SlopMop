@@ -314,114 +314,137 @@
   }
 
   // Highlight an element and add interactive label
-  function highlightElement(element, type, reason, confidence) {
+function highlightElement(element, type, reason, confidence) {
   element.classList.add('scanner-highlight', `scanner-${type}`);
 
   const elementId = `scanner-element-${elementIdCounter++}`;
   element.setAttribute('data-scanner-id', elementId);
 
-  const label = createLabel(type, elementId, reason, confidence);
+  const tooltip = createTooltip(type, elementId, reason, confidence);
 
-  // Position label relative to viewport
-  const rect = element.getBoundingClientRect();
+  tooltip.style.position = 'absolute';
+  tooltip.style.zIndex = '2147483647'; // Max safe z-index
+  tooltip.style.display = 'none'; // Hide by default
+  tooltip.style.pointerEvents = 'auto'; // Allow interaction with tooltip
 
-  label.style.position = 'absolute';
-  label.style.top = `${window.scrollY + rect.top - 24}px`;
-  label.style.left = `${window.scrollX + rect.left}px`;
-  label.style.zIndex = '2147483647'; // Max safe z-index
+  document.body.appendChild(tooltip);
 
-  document.body.appendChild(label);
+  let hideTimeout = null;
+  let isTooltipHovered = false;
+  let isElementHovered = false;
+
+  // Function to position tooltip at cursor
+  const positionTooltip = (e) => {
+    const offsetX = 15; // Offset to bottom-right
+    const offsetY = 15;
+    
+    tooltip.style.left = `${e.pageX + offsetX}px`;
+    tooltip.style.top = `${e.pageY + offsetY}px`;
+  };
+
+  // Function to show tooltip
+  const showTooltip = (e) => {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+    positionTooltip(e);
+    tooltip.style.display = 'block';
+  };
+
+  // Function to hide tooltip
+  const hideTooltip = () => {
+    hideTimeout = setTimeout(() => {
+      if (!isTooltipHovered && !isElementHovered) {
+        tooltip.style.display = 'none';
+      }
+    }, 200);
+  };
+
+  // Show tooltip when hovering over the highlighted element
+  element.addEventListener('mouseenter', (e) => {
+    isElementHovered = true;
+    showTooltip(e);
+  });
+
+  // Update tooltip position as mouse moves over element
+  element.addEventListener('mousemove', (e) => {
+    if (tooltip.style.display === 'block') {
+      positionTooltip(e);
+    }
+  });
+
+  element.addEventListener('mouseleave', () => {
+    isElementHovered = false;
+    hideTooltip();
+  });
+
+  // Keep tooltip open when hovering over it
+  tooltip.addEventListener('mouseenter', () => {
+    isTooltipHovered = true;
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+  });
+
+  tooltip.addEventListener('mouseleave', () => {
+    isTooltipHovered = false;
+    hideTooltip();
+  });
 }
 
 
-  // Create interactive label with hover functionality
-  function createLabel(type, elementId, reason, confidence) {
-    const label = document.createElement('div');
-    label.className = `scanner-label scanner-label-${type}`;
-    
-    // Set emoji and text based on type
-    const labelText = {
-      malicious: 'Malicious',
-      trackers: 'Tracker',
-      ai: 'AI Generated',
-      misinformation: 'Misinformation'
-    };
-    
-    label.textContent = labelText[type] || '⚠️ Flagged';
-    
-    // Create tooltip (hidden by default)
-    const tooltip = createTooltip(type, elementId, reason, confidence);
-    label.appendChild(tooltip);
-    
-    let hideTimeout = null;
-    
-    // Show tooltip on hover
-    label.addEventListener('mouseenter', () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-      tooltip.style.display = 'block';
-    });
-    
-    label.addEventListener('mouseleave', () => {
-      // Delay hiding to allow mouse to move to tooltip
-      hideTimeout = setTimeout(() => {
-        tooltip.style.display = 'none';
-      }, 200);
-    });
-    
-    // Keep tooltip open when hovering over it
-    tooltip.addEventListener('mouseenter', () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-      tooltip.style.display = 'block';
-    });
-    
-    tooltip.addEventListener('mouseleave', () => {
-      hideTimeout = setTimeout(() => {
-        tooltip.style.display = 'none';
-      }, 200);
-    });
-    
-    return label;
+// Create tooltip with header, description and mark as safe button
+function createTooltip(type, elementId, reason, confidence) {
+  const tooltip = document.createElement('div');
+  tooltip.className = `scanner-tooltip scanner-tooltip-${type}`;
+  
+  // Header with label text
+  const header = document.createElement('div');
+  header.className = 'scanner-tooltip-header';
+  
+  const labelText = {
+    malicious: '🚨 Malicious',
+    trackers: '👁️ Tracker',
+    ai: '🤖 AI Generated',
+    misinformation: '⚠️ Misinformation'
+  };
+  
+  header.textContent = labelText[type] || '⚠️ Flagged';
+  tooltip.appendChild(header);
+  
+  // Description
+  const description = document.createElement('div');
+  description.className = 'scanner-tooltip-description';
+  
+  // Use AI-provided reason if available, otherwise use default
+  let tooltipText = reason ? reason : DESCRIPTIONS[type];
+  
+  // Add confidence if available
+  if (confidence !== undefined) {
+    tooltipText += ' [Confidence: ' + Math.round(confidence * 100) + '%]';
   }
+  
+  description.textContent = tooltipText;
+  tooltip.appendChild(description);
+  
+  // Mark as Safe button
+  const button = document.createElement('button');
+  button.className = 'scanner-tooltip-button';
+  button.textContent = 'Mark as Safe';
+  button.addEventListener('click', (e) => {
+    e.stopPropagation();
+    markAsSafe(elementId, type);
+  });
+  tooltip.appendChild(button);
+  
+  return tooltip;
+}
 
-  // Create tooltip with description and mark as safe button
-  function createTooltip(type, elementId, reason, confidence) {
-    const tooltip = document.createElement('div');
-    tooltip.className = 'scanner-tooltip';
-    
-    // Description
-    const description = document.createElement('div');
-    description.className = 'scanner-tooltip-description';
-    
-    // Use AI-provided reason if available, otherwise use default
-    let tooltipText = reason ? reason : DESCRIPTIONS[type];
-    
-    // Add confidence if available
-    if (confidence !== undefined) {
-      tooltipText += ' [Confidence: ' + Math.round(confidence * 100) + '%]';
-    }
-    
-    description.textContent = tooltipText;
-    
-    tooltip.appendChild(description);
-    
-    // Mark as Safe button
-    const button = document.createElement('button');
-    button.className = 'scanner-tooltip-button';
-    button.textContent = 'Mark as Safe';
-    button.addEventListener('click', (e) => {
-      e.stopPropagation();
-      markAsSafe(elementId, type);
-    });
-    tooltip.appendChild(button);
-    
-    return tooltip;
-  }
+
+// Create interactive label with hover functionality - REMOVE THIS FUNCTION
+// (No longer needed since we're only using the tooltip)
 
   // Mark element as safe
   function markAsSafe(elementId, type) {
