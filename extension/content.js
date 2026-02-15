@@ -314,6 +314,7 @@
   }
 
   // Highlight an element and add interactive label
+  // Highlight an element and add interactive label
 function highlightElement(element, type, reason, confidence) {
   element.classList.add('scanner-highlight', `scanner-${type}`);
 
@@ -332,14 +333,18 @@ function highlightElement(element, type, reason, confidence) {
   let hideTimeout = null;
   let isTooltipHovered = false;
   let isElementHovered = false;
+  let tooltipPositioned = false;
 
-  // Function to position tooltip at cursor
+  // Function to position tooltip at cursor (only called once)
   const positionTooltip = (e) => {
+    if (tooltipPositioned) return; // Don't reposition once set
+    
     const offsetX = 15; // Offset to bottom-right
     const offsetY = 15;
     
     tooltip.style.left = `${e.pageX + offsetX}px`;
     tooltip.style.top = `${e.pageY + offsetY}px`;
+    tooltipPositioned = true;
   };
 
   // Function to show tooltip
@@ -357,6 +362,7 @@ function highlightElement(element, type, reason, confidence) {
     hideTimeout = setTimeout(() => {
       if (!isTooltipHovered && !isElementHovered) {
         tooltip.style.display = 'none';
+        tooltipPositioned = false; // Reset so it can be repositioned next time
       }
     }, 200);
   };
@@ -367,12 +373,8 @@ function highlightElement(element, type, reason, confidence) {
     showTooltip(e);
   });
 
-  // Update tooltip position as mouse moves over element
-  element.addEventListener('mousemove', (e) => {
-    if (tooltip.style.display === 'block') {
-      positionTooltip(e);
-    }
-  });
+  // Remove mousemove event - we don't want tooltip to follow cursor
+  // element.addEventListener('mousemove', (e) => { ... }); // REMOVED
 
   element.addEventListener('mouseleave', () => {
     isElementHovered = false;
