@@ -455,6 +455,44 @@ function updateScanProgress(message, percentage) {
 
 // Listen for video analysis requests from content.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'videoCount') {
+    console.log('Video count:', request.count);
+    
+    // Show video count in popup
+    const findings = document.querySelector('.findings');
+    if (findings) {
+      // Remove existing video section if present
+      const existingVideoSection = document.getElementById('videoSection');
+      if (existingVideoSection) {
+        existingVideoSection.remove();
+      }
+      
+      let videosHtml = '';
+      if (request.videos && request.videos.length > 0) {
+        videosHtml = request.videos.map(v => 
+          `<a href="${v.url}" class="video-link" target="_blank">${v.url}</a>`
+        ).join('');
+      }
+      
+      const videoSection = document.createElement('div');
+      videoSection.className = 'finding-section';
+      videoSection.id = 'videoSection';
+      videoSection.innerHTML = `
+        <div class="finding-header">
+          <span class="finding-icon">🎬</span>
+          <span class="finding-title">Videos Found</span>
+        </div>
+        <div class="finding-content">
+          <p class="video-count">${request.count} video${request.count !== 1 ? 's' : ''} detected on this page</p>
+          <div class="video-links">${videosHtml}</div>
+        </div>
+      `;
+      findings.appendChild(videoSection);
+    }
+    
+    sendResponse({ received: true, count: request.count });
+  }
+  
   if (request.action === 'analyzeVideo') {
     console.log('Video detected on page:', request.videoUrl);
     
