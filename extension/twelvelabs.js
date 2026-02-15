@@ -8,8 +8,8 @@ const cors = require('cors');
 const app = express();
 const PORT = 9603;
 
-const ytDlpWrap = new YTDlpWrap('./bin/yt-dlp.exe'); 
-const client = new TwelveLabs({ apiKey: 'tlk_2HMQC1H37QGHWV2PZ95YB1ZVN9YN' });
+const ytDlpWrap = new YTDlpWrap('./bin/yt-dlp.exe'); // Adjust the path to yt-dlp as needed (Windows - yt-dlp.exe; Linux - yt-dlp_linux; Mac - yt-dlp_macos); For Limux/Mac, make sure to have ffmpeg installed (bash command: `ffmpeg -version`)
+const client = new TwelveLabs({ apiKey: 'API KEY' });
 // const textPrompt = "Analyze this video for common AI artifacts like unnatural movements, flickering textures, or warped backgrounds, and state in one sentence whether it appears to be AI-generated and why.";
 const textPrompt = "Is this video AI-generated? State in one sentence whether it appears to be AI-generated and why.";
 
@@ -37,9 +37,7 @@ async function downloadVideo(url, outputFile, durationSeconds) {
 }
 
 
-/*
-Main logic
- */
+//Main logic
 async function runAnalysis(videoUrl) {
     const tempFile = path.join(__dirname, `temp_${Date.now()}.mp4`);
     
@@ -88,23 +86,6 @@ async function runAnalysis(videoUrl) {
 }
 
 
-// =============== Example Usage ===============
-
-// const VideoUrl = 'https://github.com/twelvelabs-io/twelvelabs-developer-experience/raw/refs/heads/main/quickstarts/steve_jobs_introduces_iphone_in_2007.mp4';
-// const timerLabel = "Video Analysis Execution Time";
-// console.time(timerLabel);
-
-// analysis_result = runAnalysis(VideoUrl)
-// console.timeEnd(timerLabel);
-/*
-{
-  "Analysis Result": "The video does not exhibit common AI artifacts such as unnatural movements, flickering textures, or warped backgrounds, and appears to be a genuine, straightforward recording of a 
-presentation with consistent visual quality and natural scene behavior, indicating it is not AI-generated."
-}
-*/
-
-
-
 // API Endpoint
 app.post('/analyze', async (req, res) => {
     const { videoUrl } = req.body;
@@ -121,8 +102,6 @@ app.post('/analyze', async (req, res) => {
         const result = await runAnalysis(videoUrl);
         console.timeEnd(timerLabel);
         
-        // result is already a JSON string from your code, 
-        // but res.send() handles it well. 
         res.send(result); 
 
     } catch (error) {
@@ -134,10 +113,5 @@ app.post('/analyze', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 API Server running at http://localhost:${PORT}`);
-    console.log(`Extension should POST to: http://localhost:${PORT}/analyze`);
 });
 
-
-
-
-//====================
