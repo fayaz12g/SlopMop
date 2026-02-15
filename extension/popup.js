@@ -240,7 +240,7 @@ function showApiKeyWarning() {
   statusIndicator.className = 'status-indicator status-warning';
   checkIcon.classList.add('hidden');
   warningIcon.classList.remove('hidden');
-  statusText.textContent = 'API Key Required';
+  // statusText.textContent = 'API Key Required';
   
   // Hide all sections
   maliciousSection.style.display = 'none';
