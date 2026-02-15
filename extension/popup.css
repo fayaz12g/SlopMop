@@ -559,7 +559,7 @@
   background: linear-gradient(135deg, #8b7355 0%, #6d5d47 100%);
   color: #fff;
   border: 1px solid #a08464;
-  border-radius: 0px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

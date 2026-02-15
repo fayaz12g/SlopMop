@@ -452,3 +452,37 @@ function updateScanProgress(message, percentage) {
     }
   }
 }
+
+// Listen for video analysis requests from content.js
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'analyzeVideo') {
+    console.log('Video detected on page:', request.videoUrl);
+    
+    // Show video found indicator in popup
+    const findings = document.querySelector('.findings');
+    if (findings) {
+      const videoFound = document.createElement('div');
+      videoFound.className = 'finding-section';
+      videoFound.id = 'videoSection';
+      videoFound.innerHTML = `
+        <div class="finding-header">
+          <span class="finding-icon">🎬</span>
+          <span class="finding-title">Video Found</span>
+        </div>
+        <div class="finding-content">
+          <p class="video-url">${request.videoUrl}</p>
+          <p class="video-type">Type: ${request.videoType}</p>
+        </div>
+      `;
+      findings.appendChild(videoFound);
+    }
+    
+    // TODO: Integrate with Twelve Labs API
+    // To use twelvelabs.js, you need a backend service since it requires Node.js modules.
+    // The video URL is available at: request.videoUrl
+    // Call your backend API endpoint here to run the analysis
+    
+    sendResponse({ received: true, videoUrl: request.videoUrl });
+  }
+  return true;
+});
