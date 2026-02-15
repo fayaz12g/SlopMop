@@ -4,6 +4,8 @@
 
   console.log('📝 CONTENT.JS LOADED AND RUNNING');
 
+  let activeScanId = 0;
+
   // Store scan results
   let scanResults = {
     malicious: 0,
@@ -154,7 +156,8 @@
     console.log('🔍 Available on window:', Object.keys(window));
     console.log('🔍 GeminiService available:', typeof window.GeminiService);
     console.log('🔍 Enabled threats:', enabledThreats);
-
+    const thisScanId = ++activeScanId;
+    
     // Clear previous results
     clearHighlights();
     scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
@@ -206,6 +209,12 @@
       const batch = batches[i];
       console.log(`Processing batch ${i + 1}/${batches.length}...`);
       
+      // Abort if a newer scan started
+      if (thisScanId !== activeScanId) {
+        console.log('⛔ Aborting outdated scan');
+        return scanResults;
+      }
+
       try {
         const analysis = await window.GeminiService.analyzeContent(batch);
         
