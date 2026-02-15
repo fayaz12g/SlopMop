@@ -648,10 +648,15 @@ function displayError(message) {
 }
 
 // Update scanning progress with message and percentage
-function updateScanProgress(message, percentage) {
+function updateScanProgress(message, percentage, details = null) {
   const scanText = scanningDiv.querySelector('p');
   if (scanText) {
-    scanText.textContent = message;
+    // Add more detailed information if provided
+    if (details && details.currentBatch && details.totalBatches) {
+      scanText.textContent = `${message} (${details.currentBatch}/${details.totalBatches})`;
+    } else {
+      scanText.textContent = message;
+    }
   }
   
   // Add percentage if we want to show it (future enhancement)
@@ -663,10 +668,18 @@ function updateScanProgress(message, percentage) {
   }
 }
 
-// Listen for video analysis requests from content.js
-// Listen for video analysis requests from content.js
+// Listen for video analysis requests and scan progress from content.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'videoCount') {
+  if (request.action === 'scanProgress') {
+    // Update the scanning progress in real-time
+    updateScanProgress(request.message, request.percentage, {
+      currentBatch: request.currentBatch,
+      totalBatches: request.totalBatches,
+      completed: request.completed
+    });
+    sendResponse({ received: true });
+    return true;
+  } else if (request.action === 'videoCount') {
     console.log('Video count:', request.count);
     
     const findings = document.querySelector('.findings');
