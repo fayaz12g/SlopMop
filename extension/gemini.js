@@ -153,9 +153,9 @@ Respond ONLY with valid JSON in this exact format (no markdown, no additional te
   "results": [
     {
       "elementId": "element-1",
-      "category": "malicious",
       "confidence": 0.85,
-      "reason": "Contains phishing language"
+      "reason": "Contains phishing language",
+      "category": "malicious"
     }
   ]
 }
