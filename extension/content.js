@@ -444,10 +444,6 @@ function createTooltip(type, elementId, reason, confidence) {
   return tooltip;
 }
 
-
-// Create interactive label with hover functionality - REMOVE THIS FUNCTION
-// (No longer needed since we're only using the tooltip)
-
   // Mark element as safe
   function markAsSafe(elementId, type) {
     const element = document.querySelector(`[data-scanner-id="${elementId}"]`);

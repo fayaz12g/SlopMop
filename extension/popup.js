@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadApiKey();
   checkApiKeyStatus();
 
-  // Try to load and display cached results from last scan
+  // Try to load and display cached results from last scan (nope!)
   // loadCachedResults();
 
   // View switching
@@ -71,14 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (saveBtn) saveBtn.addEventListener('click', saveApiKey);
   if (clearBtn) clearBtn.addEventListener('click', clearApiKey);
   if (apiKeyInput) apiKeyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') saveApiKey(); });
-
-  // Safety timeout: if still scanning after 3 seconds, show API key warning
-  setTimeout(() => {
-    if (!scanningDiv.classList.contains('hidden')) {
-      console.log('Safety timeout: forcing API key warning display');
-      showApiKeyWarning();
-    }
-  }, 3000);
 });
 
 // View Management
@@ -196,7 +188,7 @@ function updateApiStatus(isConfigured) {
   }
 }
 
-// Check if API key is configured (without auto-scanning)
+// Check if API key is configured
 async function checkApiKeyStatus() {
   try {
     chrome.storage.local.get(['geminiApiKey'], (result) => {
@@ -240,7 +232,7 @@ function showApiKeyWarning() {
   statusIndicator.className = 'status-indicator status-warning';
   checkIcon.classList.add('hidden');
   warningIcon.classList.remove('hidden');
-  // statusText.textContent = 'API Key Required';
+  statusText.textContent = 'API Key Required';
   
   // Hide all sections
   maliciousSection.style.display = 'none';
