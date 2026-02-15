@@ -18,14 +18,14 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   width: 380px;
   min-height: 400px;
-  color: transparent;
+  color: #fff;
   overflow: hidden;
 }
 
 .slopmop-popup-container .view {
-  background: linear-gradient(135deg, #1a1a1a 0%, #151515 100%);
+  background: #000;
   min-height: 400px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid #333;
   border-radius: 16px;
   overflow: hidden;
 }
@@ -637,4 +637,27 @@
   font-size: 13px;
   color: #8b8b8b;
   line-height: 1.6;
+}
+
+.slopmop-popup-container .video-links {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slopmop-popup-container .video-link {
+  color: #c9a96e;
+  text-decoration: none;
+  font-size: 12px;
+  word-break: break-all;
+  padding: 6px 8px;
+  background: rgba(201, 169, 110, 0.1);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.slopmop-popup-container .video-link:hover {
+  background: rgba(201, 169, 110, 0.2);
+  text-decoration: underline;
 }

@@ -81,7 +81,61 @@
       elements.push(elementData);
     });
     
+    // Find all videos on the page
+    const videoData = getAllVideosOnPage();
+    console.log(`Found ${videoData.length} video(s) on the page`);
+    
+    // Send video count and URLs to popup
+    chrome.runtime.sendMessage({
+      action: 'videoCount',
+      count: videoData.length,
+      videos: videoData
+    });
+    
     return elements;
+  }
+  
+  // Get all video elements on the page
+  function getAllVideosOnPage() {
+    const videos = [];
+    
+    // Get <video> elements with sources
+    const videoElements = document.querySelectorAll('video');
+    for (const video of videoElements) {
+      const src = video.src || video.currentSrc || video.getAttribute('data-src');
+      if (src) {
+        videos.push({ url: src, type: 'video' });
+      }
+    }
+    
+    // Get YouTube embeds
+    const youtubeEmbeds = document.querySelectorAll('iframe[src*="youtube"], iframe[src*="youtu.be"]');
+    for (const iframe of youtubeEmbeds) {
+      const src = iframe.src;
+      if (src) {
+        videos.push({ url: src, type: 'youtube' });
+      }
+    }
+    
+    // Get Vimeo embeds
+    const vimeoEmbeds = document.querySelectorAll('iframe[src*="vimeo"]');
+    for (const iframe of vimeoEmbeds) {
+      const src = iframe.src;
+      if (src) {
+        videos.push({ url: src, type: 'vimeo' });
+      }
+    }
+    
+    // Get other video iframes
+    const videoIframes = document.querySelectorAll('iframe[src*="video"], iframe[src*="dailymotion"], iframe[src*="twitch"]');
+    for (const iframe of videoIframes) {
+      const src = iframe.src;
+      if (src) {
+        videos.push({ url: src, type: 'embed' });
+      }
+    }
+    
+    return videos;
   }
 
   // Scan page with Gemini AI and respect enabled threats
