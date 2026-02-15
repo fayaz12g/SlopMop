@@ -497,12 +497,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       videoSection.className = 'finding-section';
       videoSection.id = 'videoSection';
       videoSection.innerHTML = `
-        <div class="finding-header">
-          <span class="finding-icon">🎬</span>
-          <span class="finding-title">Videos Found</span>
-        </div>
+        <h3>🎥 Videos</h3>
         <div class="finding-content">
-          <p class="video-count">${request.count} video${request.count !== 1 ? 's' : ''} detected on this page</p>
+          <p class="count">${request.count} video${request.count !== 1 ? 's' : ''} detected on this page</p>
           <div class="video-links">${videosHtml}</div>
         </div>
       `;
