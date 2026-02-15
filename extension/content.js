@@ -635,8 +635,8 @@ function createTooltip(type, elementId, reason, confidence) {
     if (request.action === 'clearScanHighlights') {
       clearHighlights();
       scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
-      lastAnalysisResults = []; // Clear stored results too
-      resetScanState(); // Also reset scan state
+      lastAnalysisResults = [];
+      resetScanState();
       sendResponse({ cleared: true });
       return true;
     }
