@@ -1,6 +1,6 @@
 # SlopMop
 
-AI-assisted browser extension to mop up the slop and misinformation in your browser. SlopMop helps you spot **AI-generated content**, **misinformation**, **tracking links**, and **malicious content** on the web pages. Additionally, it verifies the authenticity of video content and detect synthetic or AI-generated artifacts.
+[SlopMop](https://slop-mop.vercel.app) is an AI-assisted browser extension to mop up the slop and misinformation in your browser. It helps you spot **AI-generated content**, **misinformation**, **tracking links**, and **malicious content** on the web pages. Additionally, it verifies the authenticity of video content and detect synthetic or AI-generated artifacts.
 
 ---
 
@@ -49,9 +49,9 @@ npm install
 ```
 
 * Modify `twelvelabs.js` script
-    * Add TwelveLabs API Key
-    * Configure `yt-dlp` binary path*
-    * Make sure you have `ffmpeg` installed* 
+    * Add TwelveLabs API Key by modifying `API KEY` in `const client = new TwelveLabs({ apiKey: 'API KEY' });`
+    * Configure `yt-dlp` binary path by modifying the string `yt-dlp-wrap` in `const YTDlpWrap = require('yt-dlp-wrap').default;`*
+    * Install `ffmpeg`* 
 
     
     
