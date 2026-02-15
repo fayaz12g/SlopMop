@@ -18,7 +18,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   width: 380px;
   min-height: 400px;
-  color: transparent;
+  color: #fff;
   overflow: hidden;
 }
 
@@ -43,7 +43,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid #f8f7f7;
+  border-bottom: 1px solid #3a3a3a;
   background: linear-gradient(180deg, #1f1f1f 0%, #1a1a1a 100%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -637,4 +637,27 @@
   font-size: 13px;
   color: #8b8b8b;
   line-height: 1.6;
+}
+
+.slopmop-popup-container .video-links {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slopmop-popup-container .video-link {
+  color: #c9a96e;
+  text-decoration: none;
+  font-size: 12px;
+  word-break: break-all;
+  padding: 6px 8px;
+  background: rgba(201, 169, 110, 0.1);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.slopmop-popup-container .video-link:hover {
+  background: rgba(201, 169, 110, 0.2);
+  text-decoration: underline;
 }
