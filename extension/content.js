@@ -221,10 +221,28 @@
 
     console.log(`Processing ${batches.length} batch(es)...`);
 
+    // Send initial progress to popup
+    chrome.runtime.sendMessage({
+      action: 'scanProgress',
+      message: `Analyzing ${contentElements.length} elements in ${batches.length} batch${batches.length !== 1 ? 'es' : ''}...`,
+      percentage: 0,
+      currentBatch: 0,
+      totalBatches: batches.length
+    });
+
     // Process each batch
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
       console.log(`Processing batch ${i + 1}/${batches.length}...`);
+      
+      // Send progress update to popup
+      chrome.runtime.sendMessage({
+        action: 'scanProgress',
+        message: `Processing batch ${i + 1} of ${batches.length}...`,
+        percentage: Math.round(((i) / batches.length) * 100),
+        currentBatch: i + 1,
+        totalBatches: batches.length
+      });
       
       // Abort if a newer scan started
       if (thisScanId !== activeScanId) {
@@ -244,6 +262,15 @@
         // Process results and check if threat type is enabled
         if (analysis.results && Array.isArray(analysis.results)) {
           console.log(`Received ${analysis.results.length} flagged items from batch ${i + 1}`);
+          
+          // Send progress update after processing batch
+          chrome.runtime.sendMessage({
+            action: 'scanProgress',
+            message: `Completed batch ${i + 1} of ${batches.length} - Found ${analysis.results.length} items`,
+            percentage: Math.round(((i + 1) / batches.length) * 100),
+            currentBatch: i + 1,
+            totalBatches: batches.length
+          });
           
           // Filter out safe elements BEFORE storing
           const filteredResults = analysis.results.filter(result => {
@@ -298,6 +325,16 @@
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
+
+    // Send final completion message to popup
+    chrome.runtime.sendMessage({
+      action: 'scanProgress',
+      message: `Scan completed! Analyzed ${contentElements.length} elements`,
+      percentage: 100,
+      currentBatch: batches.length,
+      totalBatches: batches.length,
+      completed: true
+    });
 
     // Clean up temporary IDs but keep permanent ones
     document.querySelectorAll('[data-scanner-temp-id]').forEach(el => {
@@ -443,10 +480,6 @@ function createTooltip(type, elementId, reason, confidence) {
   
   return tooltip;
 }
-
-
-// Create interactive label with hover functionality - REMOVE THIS FUNCTION
-// (No longer needed since we're only using the tooltip)
 
   // Mark element as safe
   function markAsSafe(elementId, type) {
