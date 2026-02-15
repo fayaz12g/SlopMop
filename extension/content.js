@@ -178,6 +178,7 @@
     // Clear previous results
     clearHighlights();
     scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
+    lastAnalysisResults = []; // Clear previous analysis results
 
     // Collect sample items per category for the popup (we'll limit display there)
     const itemsByCategory = { malicious: [], trackers: [], ai: [], misinformation: [] };
@@ -272,21 +273,31 @@
             totalBatches: batches.length
           });
           
-          // Filter out safe elements BEFORE storing
-          const filteredResults = analysis.results.filter(result => {
+          // Process each result
+          analysis.results.forEach(result => {
             const element = document.querySelector(`[data-scanner-temp-id="${result.elementId}"]`);
             if (element && result.category) {
               const elementText = element.textContent.substring(0, 200);
               const textHash = hashText(elementText);
               const safeKey = `${domain}:${textHash}`;
 
+              // Skip if marked as safe
               if (safeElements[safeKey]) {
                 return;
               }
+              
               // Add permanent scanner ID for later reference (used by popup to jump)
               const permanentId = `scanner-permanent-${elementIdCounter++}`;
               element.setAttribute('data-scanner-permanent-id', permanentId);
               result.permanentId = permanentId;
+
+              // Store this result for later toggle operations
+              lastAnalysisResults.push({
+                permanentId,
+                category: result.category,
+                reason: result.reason,
+                confidence: result.confidence
+              });
 
               // Save a short sample for the popup (avoid heavy payloads) including permanentId
               try {
@@ -554,6 +565,9 @@ function createTooltip(type, elementId, reason, confidence) {
     clearHighlights();
     scanResults = { malicious: 0, trackers: 0, ai: 0, misinformation: 0 };
     
+    console.log('Re-applying highlights from stored results:', lastAnalysisResults.length);
+    console.log('Current toggle states:', toggleStates);
+    
     // Re-apply highlights based on stored results and current toggle states
     lastAnalysisResults.forEach(result => {
       const element = document.querySelector(`[data-scanner-permanent-id="${result.permanentId}"]`);
@@ -597,9 +611,6 @@ function createTooltip(type, elementId, reason, confidence) {
     if (request.action === 'getScanResults') {
       console.log('📥 CONTENT: Starting scan with Gemini...');
       console.log('📥 CONTENT: Enabled threats:', request.enabledThreats);
-      
-      // Clear previous analysis results
-      lastAnalysisResults = [];
       
       // Run scan with Gemini and pass enabled threats
       scanPage(request.enabledThreats).then(results => {
