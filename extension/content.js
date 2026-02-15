@@ -100,44 +100,56 @@
   // Get all video elements on the page
   function getAllVideosOnPage() {
     const videos = [];
+    const currentUrl = window.location.href;
+
+    // 1. Prioritize Social Media/Video Platforms (Use Page URL)
+    // yt-dlp works best with the main page URL for these sites
+    const isSocialVideoSite = 
+      currentUrl.includes('youtube.com/watch') || 
+      currentUrl.includes('youtube.com/shorts/') ||
+      currentUrl.includes('youtu.be/') ||
+      currentUrl.includes('tiktok.com/') ||
+      currentUrl.includes('instagram.com/reels/') ||
+      currentUrl.includes('instagram.com/p/');
+
+    if (isSocialVideoSite) {
+      console.log('📍 Social media site detected, using Page URL for analysis.');
+      videos.push({ 
+        url: currentUrl, 
+        type: 'platform_url' 
+      });
+      // On these sites, the <video> tags are usually blobs, so we stop here.
+      return videos; 
+    }
     
-    // Get <video> elements with sources
+    // 2. Fallback: Find standard <video> elements for non-platform sites
     const videoElements = document.querySelectorAll('video');
-    for (const video of videoElements) {
-      const src = video.src || video.currentSrc || video.getAttribute('data-src');
-      if (src) {
-        videos.push({ url: src, type: 'video' });
+    videoElements.forEach((video) => {
+      const src = video.src || video.currentSrc || video.getAttribute('src');
+      
+      // VALIDATION: Only push if it's a real URL and NOT a blob
+      if (src && src.startsWith('http') && !src.startsWith('blob:')) {
+        videos.push({ url: src, type: 'direct_video' });
       }
-    }
-    
-    // Get YouTube embeds
-    const youtubeEmbeds = document.querySelectorAll('iframe[src*="youtube"], iframe[src*="youtu.be"]');
-    for (const iframe of youtubeEmbeds) {
+    });
+
+    // 3. Check for IFrames (YouTube/Vimeo Embeds)
+    const embeds = document.querySelectorAll('iframe');
+    embeds.forEach((iframe) => {
       const src = iframe.src;
-      if (src) {
-        videos.push({ url: src, type: 'youtube' });
-      }
-    }
-    
-    // Get Vimeo embeds
-    const vimeoEmbeds = document.querySelectorAll('iframe[src*="vimeo"]');
-    for (const iframe of vimeoEmbeds) {
-      const src = iframe.src;
-      if (src) {
-        videos.push({ url: src, type: 'vimeo' });
-      }
-    }
-    
-    // Get other video iframes
-    const videoIframes = document.querySelectorAll('iframe[src*="video"], iframe[src*="dailymotion"], iframe[src*="twitch"]');
-    for (const iframe of videoIframes) {
-      const src = iframe.src;
-      if (src) {
+      if (!src) return;
+
+      if (src.includes('youtube.com/embed/') || src.includes('player.vimeo.com/video/')) {
+        // For embeds, the iframe src is a valid URL that yt-dlp can usually parse
         videos.push({ url: src, type: 'embed' });
       }
-    }
-    
-    return videos;
+    });
+
+    // 4. Deduplicate results (in case a site has multiple tags for one video)
+    const uniqueVideos = Array.from(new Set(videos.map(v => v.url)))
+      .map(url => videos.find(v => v.url === url));
+
+    return uniqueVideos;
   }
 
   function hashText(text) {

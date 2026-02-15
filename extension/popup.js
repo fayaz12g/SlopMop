@@ -650,70 +650,111 @@ function updateScanProgress(message, percentage) {
 }
 
 // Listen for video analysis requests from content.js
+// Listen for video analysis requests from content.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'videoCount') {
     console.log('Video count:', request.count);
     
-    // Show video count in popup
     const findings = document.querySelector('.findings');
     if (findings) {
-      // Remove existing video section if present
+      // Remove existing video section if present to avoid duplication
       const existingVideoSection = document.getElementById('videoSection');
       if (existingVideoSection) {
         existingVideoSection.remove();
       }
       
-      let videosHtml = '';
-      if (request.videos && request.videos.length > 0) {
-        videosHtml = request.videos.map(v => 
-          `<a href="${v.url}" class="video-link" target="_blank">${v.url}</a>`
-        ).join('');
-      }
-      
       const videoSection = document.createElement('div');
       videoSection.className = 'finding-section';
       videoSection.id = 'videoSection';
+
+      // Map videos to include an "Analyze" button for each
+      let videosHtml = '';
+      if (request.videos && request.videos.length > 0) {
+        videosHtml = request.videos.map((v, index) => `
+          <div class="video-item-container" style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <p class="video-url-text" style="font-size: 10px; color: #888; word-break: break-all; margin-bottom: 5px;">Source: ${v.url}</p>
+            <button class="twelve-labs-analyze-btn" 
+                    data-url="${v.url}" 
+                    style="background: #6200ee; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+              Is this AI Generated?
+            </button>
+            <div id="video-res-${index}" class="analysis-output" style="margin-top: 8px; font-size: 12px; color: #333; line-height: 1.4;"></div>
+          </div>
+        `).join('');
+      }
+      
       videoSection.innerHTML = `
-        <h3>🎥 Videos</h3>
+        <div class="finding-header">
+          <span class="finding-icon">🎬</span>
+          <span class="finding-title">Videos Detected</span>
+        </div>
         <div class="finding-content">
-          <p class="count">${request.count} video${request.count !== 1 ? 's' : ''} detected on this page</p>
-          <div class="video-links">${videosHtml}</div>
+          <p class="video-count" style="margin-bottom: 10px; font-weight: bold;">${request.count} video${request.count !== 1 ? 's' : ''} found on this page</p>
+          <div class="video-list-wrapper">${videosHtml}</div>
         </div>
       `;
       findings.appendChild(videoSection);
+
+      videoSection.innerHTML = `
+        <div class="finding-header">
+          <span class="finding-icon">🎬</span>
+          <span class="finding-title">Videos Detected</span>
+        </div>
+        <div class="finding-content">
+          ${request.count > 0 
+            ? `<p class="video-count" style="margin-bottom: 10px; font-weight: bold;">
+                ${request.count} video${request.count !== 1 ? 's' : ''} found on this page
+              </p>
+              <div class="video-list-wrapper">${videosHtml}</div>`
+            : `<p class="video-count" style="margin-bottom: 10px; font-weight: normal; color: #888;">
+                Please play a video to analyze for AI.
+              </p>`
+          }
+        </div>
+      `;
+      findings.appendChild(videoSection);
+
+      // Add click listeners to each button generated above
+      videoSection.querySelectorAll('.twelve-labs-analyze-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', async () => {
+          const videoUrl = btn.getAttribute('data-url');
+          const outputDiv = document.getElementById(`video-res-${idx}`);
+          
+          // UI Feedback: Loading state
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+          btn.innerText = "⏳ Processing Video...";
+          outputDiv.innerHTML = `<span style="color: #666;">Analyzing video... this takes about 20 seconds.</span>`;
+
+          try {
+            // Call your Node.js Backend API
+            const response = await fetch('http://localhost:9603/analyze', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ videoUrl: videoUrl })
+            });
+
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.details || data.error);
+
+            // Display the 1-2 sentence result from Twelve Labs
+            outputDiv.innerHTML = `<strong style="color: #9d57ff;">Analysis Result:</strong> <span style="color: #eee;">${data["Analysis Result"]}</span>`;
+            btn.innerText = "Analysis Complete";
+            btn.style.color = "#ffffff"; // Sets text to white
+            btn.style.background = "#4CAF50"; // Turn green on success
+          } catch (error) {
+            console.error('API Error:', error);
+            outputDiv.innerHTML = `<span style="color: #d32f2f;">❌ Error: ${error.message}</span>`;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerText = "Retry Analysis";
+          }
+        });
+      });
     }
     
     sendResponse({ received: true, count: request.count });
-  }
-  
-  if (request.action === 'analyzeVideo') {
-    console.log('Video detected on page:', request.videoUrl);
-    
-    // Show video found indicator in popup
-    const findings = document.querySelector('.findings');
-    if (findings) {
-      const videoFound = document.createElement('div');
-      videoFound.className = 'finding-section';
-      videoFound.id = 'videoSection';
-      videoFound.innerHTML = `
-        <div class="finding-header">
-          <span class="finding-icon">🎬</span>
-          <span class="finding-title">Video Found</span>
-        </div>
-        <div class="finding-content">
-          <p class="video-url">${request.videoUrl}</p>
-          <p class="video-type">Type: ${request.videoType}</p>
-        </div>
-      `;
-      findings.appendChild(videoFound);
-    }
-    
-    // TODO: Integrate with Twelve Labs API
-    // To use twelvelabs.js, you need a backend service since it requires Node.js modules.
-    // The video URL is available at: request.videoUrl
-    // Call your backend API endpoint here to run the analysis
-    
-    sendResponse({ received: true, videoUrl: request.videoUrl });
   }
   return true;
 });
