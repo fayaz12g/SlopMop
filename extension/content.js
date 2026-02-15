@@ -170,8 +170,6 @@
   // Scan page with Gemini AI and respect enabled threats
   async function scanPage(enabledThreats = null) {
     console.log('🔍 Starting Gemini-powered scan...');
-    console.log('🔍 Available on window:', Object.keys(window));
-    console.log('🔍 GeminiService available:', typeof window.GeminiService);
     console.log('🔍 Enabled threats:', enabledThreats);
     const thisScanId = ++activeScanId;
     
@@ -187,20 +185,11 @@
     const safeElements = storageResult.safeElements || {};
     const domain = window.location.hostname;
     
-
-    // Check if Gemini service is available
-    if (typeof window.GeminiService === 'undefined') {
-      console.error('❌ GeminiService not loaded');
-      // Fall back to showing error
-      return scanResults;
-    }
-
-    console.log('✅ GeminiService found, checking API key...');
-
     // Check if API key is configured
-    const hasKey = await window.GeminiService.hasApiKey();
-    if (!hasKey) {
+    const keyResult = await chrome.storage.local.get(['geminiApiKey']);
+    if (!keyResult.geminiApiKey) {
       console.warn('Gemini API key not configured');
+      scanResults.error = 'API key not configured';
       return scanResults;
     }
 
@@ -252,7 +241,11 @@
       }
 
       try {
-        const analysis = await window.GeminiService.analyzeContent(batch);
+        // Send to background script (bypasses page CSP)
+        const analysis = await chrome.runtime.sendMessage({
+          action: 'analyzeContent',
+          contentElements: batch
+        });
         
         if (analysis.error) {
           console.error('Analysis error:', analysis.error);
