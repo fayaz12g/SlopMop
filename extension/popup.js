@@ -29,6 +29,7 @@ const clearBtn = document.getElementById('clearBtn');
 const statusMessage = document.getElementById('statusMessage');
 const apiStatusBadge = document.getElementById('apiStatusBadge');
 const apiStatusText = document.getElementById('apiStatusText');
+const resetSafeBtn = document.getElementById('resetSafeBtn');
 
 // Toggle states stored in chrome storage
 const threatToggles = {
@@ -56,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // View switching
   settingsBtn.addEventListener('click', showSettings);
   backBtn.addEventListener('click', showMain);
+
+  // reset button listener
+  resetSafeBtn.addEventListener('click', resetSafeElements);
 
   // Scan button handler
   scanBtn.addEventListener('click', () => {
@@ -132,6 +136,21 @@ function saveApiKey() {
         // Trigger a scan with the new API key
         scanPage();
       }, 1500);
+    }
+  });
+}
+
+function resetSafeElements() {
+  if (!confirm('Are you sure you want to clear all marked safe elements?')) {
+    return;
+  }
+
+  chrome.storage.local.remove('safeElements', () => {
+    if (chrome.runtime.lastError) {
+      showMessage('Error clearing safe list: ' + chrome.runtime.lastError.message, 'error');
+    } else {
+      showMessage('Safe list cleared successfully!', 'success');
+      console.log('All safe elements removed');
     }
   });
 }

@@ -504,13 +504,4 @@
       return true;
     }
   });
-
-
-  // Auto-scan on load (optional)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      // Don't auto-scan, wait for user to click
-    });
-  }
-
 })();

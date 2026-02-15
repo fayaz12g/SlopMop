@@ -6,10 +6,24 @@
 
 @font-face {
   font-family: 'noir-text';
-  src: url('./NoirLullaby-9Y8M0.otf') format('opentype');
+  src: url('./fonts/noir.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
 }
+
+.slopmop-popup-container .danger-button {
+  background: #8b2e2e;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.slopmop-popup-container .danger-button:hover {
+  background: #a63a3a;
+}
+
 
 .slopmop-popup-container .container {
   position: relative;
