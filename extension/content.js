@@ -220,6 +220,7 @@
         
         if (analysis.error) {
           console.error('Analysis error:', analysis.error);
+          scanResults.error = analysis.error;
           continue;
         }
 

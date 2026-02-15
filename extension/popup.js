@@ -391,6 +391,22 @@ async function scanPage() {
 }
 
 function displayResults(results) {
+  // Check for API errors
+  if (results.error) {
+    let message = 'Error scanning page';
+    if (results.error.includes('429')) {
+      message = 'Rate limit exceeded. Please wait a moment before scanning again.';
+    } else if (results.error.includes('API key') || results.error.includes('API_KEY')) {
+      message = 'Invalid API key. Please check your settings.';
+    } else if (results.error.includes('network') || results.error.includes('fetch')) {
+      message = 'Network error. Please check your connection.';
+    } else {
+      message = 'Scan failed: ' + results.error;
+    }
+    displayError(message);
+    return;
+  }
+  
   // Hide scanning, show results
   scanningDiv.classList.add('hidden');
   resultsDiv.classList.remove('hidden');
@@ -546,6 +562,12 @@ function displayError(message) {
   trackersSection.style.display = 'none';
   aiSection.style.display = 'none';
   misinformationSection.style.display = 'none';
+  
+  // Hide video section if exists
+  const videoSection = document.getElementById('videoSection');
+  if (videoSection) {
+    videoSection.style.display = 'none';
+  }
 }
 
 // Update scanning progress with message and percentage
