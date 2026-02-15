@@ -238,7 +238,7 @@
               const shouldHighlight = !enabledThreats || enabledThreats[result.category] === true;
               
               if (shouldHighlight) {
-                highlightElement(element, result.category, result.reason);
+                highlightElement(element, result.category, result.reason, result.confidence);
                 scanResults[result.category]++;
                 console.log(`Highlighted ${result.category} element (enabled: ${shouldHighlight})`);
               } else {
@@ -271,7 +271,7 @@
   }
 
   // Highlight an element and add interactive label
-  function highlightElement(element, type, reason) {
+  function highlightElement(element, type, reason, confidence) {
     element.classList.add('scanner-highlight', `scanner-${type}`);
     
     // Generate unique ID for this element
@@ -279,13 +279,13 @@
     element.setAttribute('data-scanner-id', elementId);
     
     // Create label element
-    const label = createLabel(type, elementId, reason);
+    const label = createLabel(type, elementId, reason, confidence);
     
     element.appendChild(label);
   }
 
   // Create interactive label with hover functionality
-  function createLabel(type, elementId, reason) {
+  function createLabel(type, elementId, reason, confidence) {
     const label = document.createElement('div');
     label.className = `scanner-label scanner-label-${type}`;
     
@@ -300,7 +300,7 @@
     label.textContent = labelText[type] || '⚠️ Flagged';
     
     // Create tooltip (hidden by default)
-    const tooltip = createTooltip(type, elementId, reason);
+    const tooltip = createTooltip(type, elementId, reason, confidence);
     label.appendChild(tooltip);
     
     let hideTimeout = null;
@@ -340,7 +340,7 @@
   }
 
   // Create tooltip with description and mark as safe button
-  function createTooltip(type, elementId, reason) {
+  function createTooltip(type, elementId, reason, confidence) {
     const tooltip = document.createElement('div');
     tooltip.className = 'scanner-tooltip';
     
@@ -349,11 +349,14 @@
     description.className = 'scanner-tooltip-description';
     
     // Use AI-provided reason if available, otherwise use default
-    if (reason) {
-      description.textContent = `AI Analysis: ${reason}`;
-    } else {
-      description.textContent = DESCRIPTIONS[type];
+    let tooltipText = reason ? reason : DESCRIPTIONS[type];
+    
+    // Add confidence if available
+    if (confidence !== undefined) {
+      tooltipText += ' [Confidence: ' + Math.round(confidence * 100) + '%]';
     }
+    
+    description.textContent = tooltipText;
     
     tooltip.appendChild(description);
     
@@ -447,7 +450,7 @@
     lastAnalysisResults.forEach(result => {
       const element = document.querySelector(`[data-scanner-permanent-id="${result.permanentId}"]`);
       if (element && result.category && toggleStates[result.category] === true) {
-        highlightElement(element, result.category, result.reason);
+        highlightElement(element, result.category, result.reason, result.confidence);
         scanResults[result.category]++;
       }
     });
