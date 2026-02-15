@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "twelvelabs-js": "^1.2.0",
     "yt-dlp-wrap": "^2.3.12"
   }

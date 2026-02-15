@@ -2,10 +2,21 @@ const { TwelveLabs } = require('twelvelabs-js');
 const YTDlpWrap = require('yt-dlp-wrap').default;
 const fs = require('fs');
 const path = require('path');
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+const PORT = 9603;
 
 const ytDlpWrap = new YTDlpWrap('./bin/yt-dlp.exe'); 
-const client = new TwelveLabs({ apiKey: '' });
-const textPrompt = "Analyze this video for common AI artifacts like unnatural movements, flickering textures, or warped backgrounds, and state in one sentence whether it appears to be AI-generated and why.";
+const client = new TwelveLabs({ apiKey: 'tlk_2HMQC1H37QGHWV2PZ95YB1ZVN9YN' });
+// const textPrompt = "Analyze this video for common AI artifacts like unnatural movements, flickering textures, or warped backgrounds, and state in one sentence whether it appears to be AI-generated and why.";
+const textPrompt = "Is this video AI-generated? State in one sentence whether it appears to be AI-generated and why.";
+
+
+// Middleware
+app.use(cors()); // Allows the browser extension to talk to localhost
+app.use(express.json()); // Parses the JSON body of the request
 
 async function downloadVideo(url, outputFile, durationSeconds) {
     try {
@@ -13,7 +24,7 @@ async function downloadVideo(url, outputFile, durationSeconds) {
             url,
             '--download-sections', `*0-${durationSeconds}`,
             '--force-keyframes-at-cuts',
-            '-f', 'best',
+            '-f', 'b[ext=mp4]',
             '-o', outputFile,
         ]);
 
@@ -91,3 +102,42 @@ async function runAnalysis(videoUrl) {
 presentation with consistent visual quality and natural scene behavior, indicating it is not AI-generated."
 }
 */
+
+
+
+// API Endpoint
+app.post('/analyze', async (req, res) => {
+    const { videoUrl } = req.body;
+
+    if (!videoUrl) {
+        return res.status(400).json({ error: "Missing videoUrl in request body" });
+    }
+
+    console.log(`Received request for: ${videoUrl}`);
+    const timerLabel = `Total Analysis for ${videoUrl}`;
+    console.time(timerLabel);
+
+    try {
+        const result = await runAnalysis(videoUrl);
+        console.timeEnd(timerLabel);
+        
+        // result is already a JSON string from your code, 
+        // but res.send() handles it well. 
+        res.send(result); 
+
+    } catch (error) {
+        console.timeEnd(timerLabel);
+        console.error("API Error:", error.message);
+        res.status(500).json({ error: "Analysis failed", details: error.message });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 API Server running at http://localhost:${PORT}`);
+    console.log(`Extension should POST to: http://localhost:${PORT}/analyze`);
+});
+
+
+
+
+//====================
