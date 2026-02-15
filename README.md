@@ -40,8 +40,7 @@ AI-assisted browser extension to mop up the slop and misinformation in your brow
 
 ## Quick Start
 
-### Browser extension
-
+### Download and Install the Extension
 ```bash
 git clone https://github.com/fayaz12g/SlopMop.git
 cd SlopMop/extension
@@ -49,9 +48,16 @@ npm install
 node twelvelabs.js
 ```
 
+### Chrome
 1. Open Chrome → `chrome://extensions/`
 2. Turn on **Developer mode**
 3. Click **Load unpacked** and select the `extension` folder
+4. Use the SlopMop icon to scan the current page
+
+### Firefox
+1. Open Firefox -> 'about:debugging#/runtime/this-firefox'
+2. To the right of **Temporary Extensions**, click `Load Temporary Add-on...`
+3. Select file `SlopMop/extensions/manifest.json`
 4. Use the SlopMop icon to scan the current page
 
 ### Website
